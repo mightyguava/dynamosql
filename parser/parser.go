@@ -31,15 +31,15 @@ func (b *Boolean) Capture(values []string) error {
 
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
-	Expression *SelectExpression    `"SELECT" @@`
-	From       *From                `"FROM" @@`
-	Limit      *ConditionExpression `( "LIMIT" @@ )?`
-	Offset     *ConditionExpression `( "OFFSET" @@ )?`
+	Expression *SelectExpression `"SELECT" @@`
+	From       *From             `"FROM" @@`
+	Limit      *AndExpression    `( "LIMIT" @@ )?`
+	Offset     *AndExpression    `( "OFFSET" @@ )?`
 }
 
 type From struct {
-	Table string               `@Ident ( @"." @Ident )*`
-	Where *ConditionExpression `( "WHERE" @@ )?`
+	Table string         `@Ident ( @"." @Ident )*`
+	Where *AndExpression `( "WHERE" @@ )?`
 }
 
 type SelectExpression struct {
@@ -47,24 +47,23 @@ type SelectExpression struct {
 	Projections []string `| @Ident ( "," @Ident )*`
 }
 
-type ConditionExpression struct {
-	Parenthesized *ParenthesizedExpression `@@`
-	Condition     *Condition               `| @@`
-	More          []MoreConditions         `  (@@)*`
+type AndExpression struct {
+	ParenthesizedExpression *AndExpression `"(" @@ ")"`
+	Or                      []*OrCondition `| @@ { "OR" @@ }`
+}
+
+type OrCondition struct {
+	ParenthesizedExpression *AndExpression `"(" @@ ")"`
+	And                     []*Condition   `| @@ { "AND" @@ }`
 }
 
 type ParenthesizedExpression struct {
-	ConditionExpression *ConditionExpression `"(" @@ ")"`
+	ConditionExpression *AndExpression
 }
 
 type Condition struct {
 	Operand *ConditionOperand `  @@`
 	Not     *Condition        `| "NOT" @@`
-}
-
-type MoreConditions struct {
-	LogicalOperator string     `@("AND" | "OR")`
-	Condition       *Condition `@@`
 }
 
 type ConditionOperand struct {
