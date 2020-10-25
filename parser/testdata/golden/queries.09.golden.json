@@ -1,0 +1,76 @@
+{
+  "Query": "SELECT * FROM movies WHERE title = :title AND begins_with(actor, \"Will\")",
+  "AST": {
+    "Expression": {
+      "All": true,
+      "Projections": null
+    },
+    "From": {
+      "Table": "movies",
+      "Where": {
+        "Or": [
+          {
+            "And": [
+              {
+                "Parenthesized": null,
+                "Not": null,
+                "Operand": {
+                  "Operand": {
+                    "Value": {
+                      "PlaceHolder": null,
+                      "Number": null,
+                      "String": null,
+                      "Boolean": null,
+                      "Null": false
+                    },
+                    "SymbolRef": {
+                      "Symbol": "title"
+                    }
+                  },
+                  "ConditionRHS": {
+                    "Compare": {
+                      "Operator": "=",
+                      "Operand": {
+                        "Value": {
+                          "PlaceHolder": ":title",
+                          "Number": null,
+                          "String": null,
+                          "Boolean": null,
+                          "Null": false
+                        },
+                        "SymbolRef": null
+                      }
+                    },
+                    "Between": null,
+                    "In": null
+                  }
+                },
+                "Function": null
+              },
+              {
+                "Parenthesized": null,
+                "Not": null,
+                "Operand": null,
+                "Function": {
+                  "Function": "begins_with",
+                  "PathArgument": "actor",
+                  "MoreArguments": [
+                    {
+                      "PlaceHolder": null,
+                      "Number": null,
+                      "String": "Will",
+                      "Boolean": null,
+                      "Null": false
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Limit": null,
+    "Offset": null
+  }
+}

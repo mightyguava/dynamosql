@@ -2,18 +2,17 @@ package parser
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"flag"
-	"io/ioutil"
+	"fmt"
 	"os"
 	"testing"
 
-	"github.com/alecthomas/repr"
+	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-var update = flag.Bool("update", false, "update golden test update")
 
 func TestGolden(t *testing.T) {
 	flag.Parse()
@@ -39,15 +38,17 @@ func TestGolden(t *testing.T) {
 		})
 	}
 
-	if *update {
-		f, err := os.Create("testdata/queries.ast.go")
-		require.NoError(t, err)
-		repr.New(f).Print(parsed)
-	} else {
-		data, err := ioutil.ReadFile("testdata/queries.ast.json")
-		require.NoError(t, err)
-		var expected []Select
-		require.NoError(t, json.Unmarshal(data, &expected))
-		require.Equal(t, expected, parsed)
+	buf := &bytes.Buffer{}
+	enc := json.NewEncoder(buf)
+	enc.SetIndent("", "  ")
+	enc.SetEscapeHTML(false)
+	require.NoError(t, enc.Encode(parsed))
+
+	g := goldie.New(t,
+		goldie.WithDiffEngine(goldie.ColoredDiff),
+		goldie.WithFixtureDir("testdata/golden"),
+		goldie.WithNameSuffix(".golden.json"))
+	for i, q := range parsed {
+		g.AssertJson(t, fmt.Sprintf("queries.%02d", i), q)
 	}
 }

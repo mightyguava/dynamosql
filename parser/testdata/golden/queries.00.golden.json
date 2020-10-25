@@ -1,0 +1,15 @@
+{
+  "Query": "SELECT * FROM movies",
+  "AST": {
+    "Expression": {
+      "All": true,
+      "Projections": null
+    },
+    "From": {
+      "Table": "movies",
+      "Where": null
+    },
+    "Limit": null,
+    "Offset": null
+  }
+}

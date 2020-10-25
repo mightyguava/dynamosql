@@ -1,0 +1,61 @@
+{
+  "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\"",
+  "AST": {
+    "Expression": {
+      "All": false,
+      "Projections": [
+        "title",
+        "year"
+      ]
+    },
+    "From": {
+      "Table": "movies",
+      "Where": {
+        "Or": [
+          {
+            "And": [
+              {
+                "Parenthesized": null,
+                "Not": null,
+                "Operand": {
+                  "Operand": {
+                    "Value": {
+                      "PlaceHolder": null,
+                      "Number": null,
+                      "String": null,
+                      "Boolean": null,
+                      "Null": false
+                    },
+                    "SymbolRef": {
+                      "Symbol": "title"
+                    }
+                  },
+                  "ConditionRHS": {
+                    "Compare": {
+                      "Operator": "=",
+                      "Operand": {
+                        "Value": {
+                          "PlaceHolder": null,
+                          "Number": null,
+                          "String": "The Dark Knight",
+                          "Boolean": null,
+                          "Null": false
+                        },
+                        "SymbolRef": null
+                      }
+                    },
+                    "Between": null,
+                    "In": null
+                  }
+                },
+                "Function": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "Limit": null,
+    "Offset": null
+  }
+}
