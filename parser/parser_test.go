@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/alecthomas/repr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,12 +40,9 @@ func TestGolden(t *testing.T) {
 	}
 
 	if *update {
-		f, err := os.Create("testdata/queries.ast.json")
+		f, err := os.Create("testdata/queries.ast.go")
 		require.NoError(t, err)
-		enc := json.NewEncoder(f)
-		enc.SetIndent("", "  ")
-		enc.SetEscapeHTML(false)
-		require.NoError(t, enc.Encode(parsed))
+		repr.New(f).Print(parsed)
 	} else {
 		data, err := ioutil.ReadFile("testdata/queries.ast.json")
 		require.NoError(t, err)

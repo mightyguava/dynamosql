@@ -48,16 +48,23 @@ type SelectExpression struct {
 }
 
 type ConditionExpression struct {
-	Or []*OrCondition `@@ { "OR" @@ }`
+	Parenthesized *ParenthesizedExpression `@@`
+	Condition     *Condition               `| @@`
+	More          []MoreConditions         `  (@@)*`
 }
 
-type OrCondition struct {
-	And []*Condition `@@ { "AND" @@ }`
+type ParenthesizedExpression struct {
+	ConditionExpression *ConditionExpression `"(" @@ ")"`
 }
 
 type Condition struct {
 	Operand *ConditionOperand `  @@`
 	Not     *Condition        `| "NOT" @@`
+}
+
+type MoreConditions struct {
+	LogicalOperator string     `@("AND" | "OR")`
+	Condition       *Condition `@@`
 }
 
 type ConditionOperand struct {
