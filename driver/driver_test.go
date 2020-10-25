@@ -19,7 +19,7 @@ func TestDriver(t *testing.T) {
 	err = db.Ping()
 	require.NoError(t, err)
 
-	rows, err := db.Query("SELECT * FROM movies")
+	rows, err := db.Query(`SELECT * FROM movies WHERE title = "The Dark Knight"`)
 	require.NoError(t, err)
 
 	var movies []fixtures.Movie

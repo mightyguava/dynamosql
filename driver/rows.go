@@ -9,12 +9,9 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-
-	"github.com/mightyguava/dynamosql/parser"
 )
 
 type Rows struct {
-	ast  parser.Select
 	req  *dynamodb.QueryInput
 	resp *dynamodb.QueryOutput
 

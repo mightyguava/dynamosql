@@ -5,48 +5,37 @@
       "All": true,
       "Projections": null
     },
-    "From": {
-      "Table": "movies",
-      "Where": {
-        "And": [
-          {
-            "Parenthesized": null,
-            "Not": null,
+    "From": "movies",
+    "Where": {
+      "And": [
+        {
+          "Parenthesized": null,
+          "Not": null,
+          "Operand": {
             "Operand": {
-              "Operand": {
-                "Value": {
-                  "PlaceHolder": null,
-                  "Number": null,
-                  "String": null,
-                  "Boolean": null,
-                  "Null": false
-                },
-                "SymbolRef": {
-                  "Symbol": "title"
+              "Symbol": "title"
+            },
+            "ConditionRHS": {
+              "Compare": {
+                "Operator": "=",
+                "Operand": {
+                  "Value": {
+                    "PlaceHolder": ":title",
+                    "Number": null,
+                    "String": null,
+                    "Boolean": null,
+                    "Null": false
+                  },
+                  "SymbolRef": null
                 }
               },
-              "ConditionRHS": {
-                "Compare": {
-                  "Operator": "=",
-                  "Operand": {
-                    "Value": {
-                      "PlaceHolder": ":title",
-                      "Number": null,
-                      "String": null,
-                      "Boolean": null,
-                      "Null": false
-                    },
-                    "SymbolRef": null
-                  }
-                },
-                "Between": null,
-                "In": null
-              }
-            },
-            "Function": null
-          }
-        ]
-      }
+              "Between": null,
+              "In": null
+            }
+          },
+          "Function": null
+        }
+      ]
     },
     "Limit": null
   }

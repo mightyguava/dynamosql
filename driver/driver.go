@@ -8,6 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+
+	"github.com/mightyguava/dynamosql/schema"
 )
 
 func init() {
@@ -56,18 +58,20 @@ func (d *Driver) OpenConnector(connStr string) (driver.Connector, error) {
 	return &connector{
 		dynamo: dynamodb.New(sess),
 		driver: d,
+		tables: &schema.TableLoader{},
 	}, nil
 }
 
 type connector struct {
 	driver *Driver
 	dynamo *dynamodb.DynamoDB
+	tables *schema.TableLoader
 }
 
 var _ driver.Connector = &connector{}
 
 func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
-	return &conn{dynamo: c.dynamo}, nil
+	return &conn{dynamo: c.dynamo, tables: c.tables}, nil
 }
 
 func (c *connector) Driver() driver.Driver {

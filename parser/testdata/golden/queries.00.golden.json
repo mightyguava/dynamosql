@@ -5,10 +5,8 @@
       "All": true,
       "Projections": null
     },
-    "From": {
-      "Table": "movies",
-      "Where": null
-    },
+    "From": "movies",
+    "Where": null,
     "Limit": null
   }
 }
