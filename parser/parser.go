@@ -9,7 +9,9 @@ import (
 var (
 	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
 		`|(?P<Keyword>(?i)SELECT|FROM|WHERE|MINUS|EXCEPT|INTERSECT|ORDER|LIMIT|OFFSET|TRUE|FALSE|NULL|IS|NOT|ANY|SOME|BETWEEN|AND|OR|AS)` +
+		`|(?P<Function>(?i)attribute_exists|attribute_not_exists|attribute_type|begins_with|contains|size)` +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
+		`|(?P<NamedParameter>:[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
 		`|(?P<Operators><>|!=|<=|>=|[-+*/%,.()=<>])`,
@@ -31,15 +33,15 @@ func (b *Boolean) Capture(values []string) error {
 
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
-	Expression *SelectExpression `"SELECT" @@`
-	From       *From             `"FROM" @@`
-	Limit      *AndExpression    `( "LIMIT" @@ )?`
-	Offset     *AndExpression    `( "OFFSET" @@ )?`
+	Expression *SelectExpression    `"SELECT" @@`
+	From       *From                `"FROM" @@`
+	Limit      *ConditionExpression `( "LIMIT" @@ )?`
+	Offset     *ConditionExpression `( "OFFSET" @@ )?`
 }
 
 type From struct {
-	Table string         `@Ident ( @"." @Ident )*`
-	Where *AndExpression `( "WHERE" @@ )?`
+	Table string               `@Ident ( @"." @Ident )*`
+	Where *ConditionExpression `( "WHERE" @@ )?`
 }
 
 type SelectExpression struct {
@@ -47,23 +49,29 @@ type SelectExpression struct {
 	Projections []string `| @Ident ( "," @Ident )*`
 }
 
-type AndExpression struct {
-	ParenthesizedExpression *AndExpression `"(" @@ ")"`
-	Or                      []*OrCondition `| @@ { "OR" @@ }`
+type ConditionExpression struct {
+	Or []*OrCondition `@@ ( "OR" @@ )*`
 }
 
 type OrCondition struct {
-	ParenthesizedExpression *AndExpression `"(" @@ ")"`
-	And                     []*Condition   `| @@ { "AND" @@ }`
+	And []*Condition `@@ ( "AND" @@ )*`
 }
 
 type ParenthesizedExpression struct {
-	ConditionExpression *AndExpression
+	ConditionExpression *ConditionExpression
 }
 
 type Condition struct {
-	Operand *ConditionOperand `  @@`
-	Not     *Condition        `| "NOT" @@`
+	Parenthesized *ConditionExpression `  "(" @@ ")"`
+	Not           *Condition           `| "NOT" @@`
+	Operand       *ConditionOperand    `| @@`
+	Function      *FunctionExpression  `| @@`
+}
+
+type FunctionExpression struct {
+	Function      string  `@Function`
+	PathArgument  string  `"(" @Ident`
+	MoreArguments []Value `    ( "," @@ )* ")"`
 }
 
 type ConditionOperand struct {
@@ -97,8 +105,9 @@ type SymbolRef struct {
 }
 
 type Value struct {
-	Number  *float64 `   @Number`
-	String  *string  ` | @String`
-	Boolean *Boolean ` | @("TRUE" | "FALSE")`
-	Null    bool     ` | @"NULL"`
+	PlaceHolder *string  `  @NamedParameter`
+	Number      *float64 `| @Number`
+	String      *string  `| @String`
+	Boolean     *Boolean `| @("TRUE" | "FALSE")`
+	Null        bool     `| @"NULL"`
 }
