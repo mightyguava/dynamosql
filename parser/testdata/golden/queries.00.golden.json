@@ -9,7 +9,6 @@
       "Table": "movies",
       "Where": null
     },
-    "Limit": null,
-    "Offset": null
+    "Limit": null
   }
 }

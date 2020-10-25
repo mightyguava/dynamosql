@@ -2,8 +2,6 @@ package parser
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -14,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGolden(t *testing.T) {
+func TestGoldenGoodQueries(t *testing.T) {
 	flag.Parse()
 
 	type row struct {
@@ -38,17 +36,44 @@ func TestGolden(t *testing.T) {
 		})
 	}
 
-	buf := &bytes.Buffer{}
-	enc := json.NewEncoder(buf)
-	enc.SetIndent("", "  ")
-	enc.SetEscapeHTML(false)
-	require.NoError(t, enc.Encode(parsed))
-
 	g := goldie.New(t,
 		goldie.WithDiffEngine(goldie.ColoredDiff),
 		goldie.WithFixtureDir("testdata/golden"),
 		goldie.WithNameSuffix(".golden.json"))
 	for i, q := range parsed {
 		g.AssertJson(t, fmt.Sprintf("queries.%02d", i), q)
+	}
+}
+
+func TestGoldenBadQueries(t *testing.T) {
+	flag.Parse()
+
+	type row struct {
+		Query string
+		Error string
+	}
+
+	queries, err := os.Open("testdata/bad_queries.sql")
+	require.NoError(t, err)
+	defer queries.Close()
+	scanner := bufio.NewScanner(queries)
+	var parsed []row
+	for scanner.Scan() {
+		var ast Select
+		query := scanner.Text()
+		err := Parser.ParseString(query, &ast)
+		require.Errorf(t, err, "Parse %s, expected error but did not", query)
+		parsed = append(parsed, row{
+			Query: query,
+			Error: err.Error(),
+		})
+	}
+
+	g := goldie.New(t,
+		goldie.WithDiffEngine(goldie.ColoredDiff),
+		goldie.WithFixtureDir("testdata/golden"),
+		goldie.WithNameSuffix(".golden.json"))
+	for i, q := range parsed {
+		g.AssertJson(t, fmt.Sprintf("bad_queries.%02d", i), q)
 	}
 }

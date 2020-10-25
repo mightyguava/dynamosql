@@ -33,15 +33,14 @@ func (b *Boolean) Capture(values []string) error {
 
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
-	Expression *SelectExpression    `"SELECT" @@`
-	From       *From                `"FROM" @@`
-	Limit      *ConditionExpression `( "LIMIT" @@ )?`
-	Offset     *ConditionExpression `( "OFFSET" @@ )?`
+	Expression *SelectExpression `"SELECT" @@`
+	From       *From             `"FROM" @@`
+	Limit      *int              `( "LIMIT" @Number )?`
 }
 
 type From struct {
-	Table string               `@Ident ( @"." @Ident )*`
-	Where *ConditionExpression `( "WHERE" @@ )?`
+	Table string         `@Ident ( @"." @Ident )*`
+	Where *AndExpression `( "WHERE" @@ )?`
 }
 
 type SelectExpression struct {
@@ -50,10 +49,10 @@ type SelectExpression struct {
 }
 
 type ConditionExpression struct {
-	Or []*OrCondition `@@ ( "OR" @@ )*`
+	Or []*AndExpression `@@ ( "OR" @@ )*`
 }
 
-type OrCondition struct {
+type AndExpression struct {
 	And []*Condition `@@ ( "AND" @@ )*`
 }
 
