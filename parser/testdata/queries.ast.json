@@ -1,0 +1,278 @@
+[
+  {
+    "Query": "SELECT * FROM movies",
+    "AST": {
+      "Expression": {
+        "All": true,
+        "Projections": null
+      },
+      "From": {
+        "Table": "movies",
+        "Where": null
+      },
+      "Limit": null,
+      "Offset": null
+    }
+  },
+  {
+    "Query": "SELECT title, year FROM movies",
+    "AST": {
+      "Expression": {
+        "All": false,
+        "Projections": [
+          "title",
+          "year"
+        ]
+      },
+      "From": {
+        "Table": "movies",
+        "Where": null
+      },
+      "Limit": null,
+      "Offset": null
+    }
+  },
+  {
+    "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\"",
+    "AST": {
+      "Expression": {
+        "All": false,
+        "Projections": [
+          "title",
+          "year"
+        ]
+      },
+      "From": {
+        "Table": "movies",
+        "Where": {
+          "Or": [
+            {
+              "And": [
+                {
+                  "Operand": {
+                    "Operand": {
+                      "Value": {
+                        "Number": null,
+                        "String": null,
+                        "Boolean": null,
+                        "Null": false
+                      },
+                      "SymbolRef": {
+                        "Symbol": "title"
+                      }
+                    },
+                    "ConditionRHS": {
+                      "Compare": {
+                        "Operator": "=",
+                        "Operand": {
+                          "Value": {
+                            "Number": null,
+                            "String": "The Dark Knight",
+                            "Boolean": null,
+                            "Null": false
+                          },
+                          "SymbolRef": null
+                        }
+                      },
+                      "Between": null,
+                      "In": null
+                    }
+                  },
+                  "Not": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "Limit": null,
+      "Offset": null
+    }
+  },
+  {
+    "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\" AND year >= 2009",
+    "AST": {
+      "Expression": {
+        "All": false,
+        "Projections": [
+          "title",
+          "year"
+        ]
+      },
+      "From": {
+        "Table": "movies",
+        "Where": {
+          "Or": [
+            {
+              "And": [
+                {
+                  "Operand": {
+                    "Operand": {
+                      "Value": {
+                        "Number": null,
+                        "String": null,
+                        "Boolean": null,
+                        "Null": false
+                      },
+                      "SymbolRef": {
+                        "Symbol": "title"
+                      }
+                    },
+                    "ConditionRHS": {
+                      "Compare": {
+                        "Operator": "=",
+                        "Operand": {
+                          "Value": {
+                            "Number": null,
+                            "String": "The Dark Knight",
+                            "Boolean": null,
+                            "Null": false
+                          },
+                          "SymbolRef": null
+                        }
+                      },
+                      "Between": null,
+                      "In": null
+                    }
+                  },
+                  "Not": null
+                },
+                {
+                  "Operand": {
+                    "Operand": {
+                      "Value": {
+                        "Number": null,
+                        "String": null,
+                        "Boolean": null,
+                        "Null": false
+                      },
+                      "SymbolRef": {
+                        "Symbol": "year"
+                      }
+                    },
+                    "ConditionRHS": {
+                      "Compare": {
+                        "Operator": ">=",
+                        "Operand": {
+                          "Value": {
+                            "Number": 2009,
+                            "String": null,
+                            "Boolean": null,
+                            "Null": false
+                          },
+                          "SymbolRef": null
+                        }
+                      },
+                      "Between": null,
+                      "In": null
+                    }
+                  },
+                  "Not": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "Limit": null,
+      "Offset": null
+    }
+  },
+  {
+    "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\" AND year BETWEEN 2009 AND 2015",
+    "AST": {
+      "Expression": {
+        "All": false,
+        "Projections": [
+          "title",
+          "year"
+        ]
+      },
+      "From": {
+        "Table": "movies",
+        "Where": {
+          "Or": [
+            {
+              "And": [
+                {
+                  "Operand": {
+                    "Operand": {
+                      "Value": {
+                        "Number": null,
+                        "String": null,
+                        "Boolean": null,
+                        "Null": false
+                      },
+                      "SymbolRef": {
+                        "Symbol": "title"
+                      }
+                    },
+                    "ConditionRHS": {
+                      "Compare": {
+                        "Operator": "=",
+                        "Operand": {
+                          "Value": {
+                            "Number": null,
+                            "String": "The Dark Knight",
+                            "Boolean": null,
+                            "Null": false
+                          },
+                          "SymbolRef": null
+                        }
+                      },
+                      "Between": null,
+                      "In": null
+                    }
+                  },
+                  "Not": null
+                },
+                {
+                  "Operand": {
+                    "Operand": {
+                      "Value": {
+                        "Number": null,
+                        "String": null,
+                        "Boolean": null,
+                        "Null": false
+                      },
+                      "SymbolRef": {
+                        "Symbol": "year"
+                      }
+                    },
+                    "ConditionRHS": {
+                      "Compare": null,
+                      "Between": {
+                        "Start": {
+                          "Value": {
+                            "Number": 2009,
+                            "String": null,
+                            "Boolean": null,
+                            "Null": false
+                          },
+                          "SymbolRef": null
+                        },
+                        "End": {
+                          "Value": {
+                            "Number": 2015,
+                            "String": null,
+                            "Boolean": null,
+                            "Null": false
+                          },
+                          "SymbolRef": null
+                        }
+                      },
+                      "In": null
+                    }
+                  },
+                  "Not": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "Limit": null,
+      "Offset": null
+    }
+  }
+]
