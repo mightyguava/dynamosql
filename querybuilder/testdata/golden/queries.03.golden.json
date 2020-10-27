@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND GameTitle BETWEEN :MinGameTitle AND :MaxGameTitle AND TopScore > :MinTopScore",
+  "Query": "SELECT * FROM gamescores WHERE UserId = \"103\" AND GameTitle BETWEEN \"Galaxy\" AND \"Meteor\" AND TopScore > 1000",
   "Prepared": {
     "Query": {
       "AttributesToGet": null,
@@ -8,9 +8,9 @@
       "ExclusiveStartKey": null,
       "ExpressionAttributeNames": null,
       "ExpressionAttributeValues": null,
-      "FilterExpression": "TopScore > :MinTopScore",
+      "FilterExpression": "TopScore > :_gen4",
       "IndexName": null,
-      "KeyConditionExpression": "UserId = :UserId AND GameTitle BETWEEN :MinGameTitle AND :MaxGameTitle",
+      "KeyConditionExpression": "UserId = :_gen1 AND GameTitle BETWEEN :_gen2 AND :_gen3",
       "KeyConditions": null,
       "Limit": null,
       "ProjectionExpression": null,
@@ -20,12 +20,12 @@
       "Select": null,
       "TableName": "gamescores"
     },
-    "FreeParams": {
-      ":MaxGameTitle": {},
-      ":MinGameTitle": {},
-      ":MinTopScore": {},
-      ":UserId": {}
-    },
-    "FixedParams": {}
+    "FreeParams": {},
+    "FixedParams": {
+      ":_gen1": "103",
+      ":_gen2": "Galaxy",
+      ":_gen3": "Meteor",
+      ":_gen4": 1000
+    }
   }
 }

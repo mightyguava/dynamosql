@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/alecthomas/repr"
@@ -16,8 +15,9 @@ import (
 )
 
 type PreparedQuery struct {
-	Query      *dynamodb.QueryInput
-	FreeParams map[string]Empty
+	Query       *dynamodb.QueryInput
+	FreeParams  map[string]Empty
+	FixedParams map[string]interface{}
 }
 
 type KeyExpression struct{}
@@ -48,19 +48,33 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	if result.Filter != "" {
 		req.FilterExpression = aws.String(result.Filter)
 	}
-	return &PreparedQuery{Query: req, FreeParams: visit.Context.Params}, nil
+	return &PreparedQuery{
+		Query:       req,
+		FreeParams:  visit.Context.FreeParams,
+		FixedParams: visit.Context.FixedParams,
+	}, nil
 }
 
 type Context struct {
-	Table  *schema.Table
-	Params map[string]Empty
+	Table       *schema.Table
+	FreeParams  map[string]Empty
+	FixedParams map[string]interface{}
+
+	genParamCount int
 }
 
 func NewContext(table *schema.Table) *Context {
 	return &Context{
-		Table:  table,
-		Params: make(map[string]Empty),
+		Table:       table,
+		FreeParams:  make(map[string]Empty),
+		FixedParams: make(map[string]interface{}),
 	}
+}
+
+// NextGeneratedParam returns the next generated parameter placeholder name.
+func (c *Context) NextGeneratedParam() string {
+	c.genParamCount++
+	return fmt.Sprintf(":_gen%d", c.genParamCount)
 }
 
 type Empty struct{}
@@ -207,16 +221,24 @@ func (v *visitor) VisitTerm(n interface{}) string {
 	case *parser.Value:
 		switch {
 		case node.PlaceHolder != nil:
-			v.Context.Params[*node.PlaceHolder] = Empty{}
+			v.Context.FreeParams[*node.PlaceHolder] = Empty{}
 			return *node.PlaceHolder
 		case node.Number != nil:
-			return strconv.FormatFloat(*node.Number, 'g', -1, 64)
+			name := v.Context.NextGeneratedParam()
+			v.Context.FixedParams[name] = *node.Number
+			return name
 		case node.String != nil:
-			return *node.String
+			name := v.Context.NextGeneratedParam()
+			v.Context.FixedParams[name] = *node.String
+			return name
 		case node.Boolean != nil:
-			return strconv.FormatBool(bool(*node.Boolean))
+			name := v.Context.NextGeneratedParam()
+			v.Context.FixedParams[name] = bool(*node.Boolean)
+			return name
 		case node.Null:
-			return "NULL"
+			name := v.Context.NextGeneratedParam()
+			v.Context.FixedParams[name] = "NULL"
+			return name
 		default:
 			panic("invalid value" + repr.String(node))
 		}

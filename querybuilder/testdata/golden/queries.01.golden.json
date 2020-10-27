@@ -23,6 +23,7 @@
     "FreeParams": {
       ":MinTopScore": {},
       ":UserId": {}
-    }
+    },
+    "FixedParams": {}
   }
 }
