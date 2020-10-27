@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\" AND year \u003e= 2009",
+  "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\" AND year >= 2009",
   "AST": {
     "Expression": {
       "All": false,
@@ -47,7 +47,7 @@
             },
             "ConditionRHS": {
               "Compare": {
-                "Operator": "\u003e=",
+                "Operator": ">=",
                 "Operand": {
                   "Value": {
                     "PlaceHolder": null,

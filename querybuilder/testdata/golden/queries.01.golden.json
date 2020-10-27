@@ -1,0 +1,22 @@
+{
+  "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND TopScore > :MinTopScore",
+  "Request": {
+    "AttributesToGet": null,
+    "ConditionalOperator": null,
+    "ConsistentRead": null,
+    "ExclusiveStartKey": null,
+    "ExpressionAttributeNames": null,
+    "ExpressionAttributeValues": {},
+    "FilterExpression": "TopScore > :MinTopScore",
+    "IndexName": null,
+    "KeyConditionExpression": "UserId = :UserId",
+    "KeyConditions": null,
+    "Limit": null,
+    "ProjectionExpression": null,
+    "QueryFilter": null,
+    "ReturnConsumedCapacity": null,
+    "ScanIndexForward": null,
+    "Select": null,
+    "TableName": "gamescores"
+  }
+}
