@@ -100,7 +100,7 @@ var GameScores = Fixture{
 // gameScoresTable is the name of the table that contains the video game high scores table fixture.
 var gameScoresTable = aws.String("gamescores")
 
-type gameScore struct {
+type GameScore struct {
 	UserID    string
 	GameTitle string
 	TopScore  int
@@ -108,7 +108,7 @@ type gameScore struct {
 	Losses    int
 }
 
-var gameScoresData = []gameScore{
+var gameScoresData = []GameScore{
 	{"101", "Galaxy Invaders", 5842, 21, 72},
 	{"101", "Meteor Blasters", 1000, 12, 3},
 	{"101", "Starship X", 24, 4, 9},

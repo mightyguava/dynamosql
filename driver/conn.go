@@ -43,7 +43,11 @@ func (c conn) QueryContext(ctx context.Context, query string, args []driver.Name
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.dynamo.QueryWithContext(ctx, q.Query)
+	req, err := q.Build()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.dynamo.QueryWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}

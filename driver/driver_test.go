@@ -11,7 +11,7 @@ import (
 )
 
 func TestDriver(t *testing.T) {
-	sess := fixtures.SetUp(t, fixtures.Movies)
+	sess := fixtures.SetUp(t, fixtures.GameScores)
 
 	driver, err := New(Config{Session: sess}).OpenConnector("")
 	require.NoError(t, err)
@@ -19,15 +19,15 @@ func TestDriver(t *testing.T) {
 	err = db.Ping()
 	require.NoError(t, err)
 
-	rows, err := db.Query(`SELECT * FROM movies WHERE title = "The Dark Knight"`)
+	rows, err := db.Query(`SELECT GameTitle, TopScore FROM gamescores WHERE UserId = "101" AND GameTitle > "Meteor"`)
 	require.NoError(t, err)
 
-	var movies []fixtures.Movie
+	var scores []fixtures.GameScore
 	for rows.Next() {
-		var m fixtures.Movie
-		err = rows.Scan(&m.Title, &m.Year)
+		var s fixtures.GameScore
+		err = rows.Scan(&s.GameTitle, &s.TopScore)
 		require.NoError(t, err)
-		movies = append(movies, m)
+		scores = append(scores, s)
 	}
-	repr.Println(movies)
+	repr.Println(scores)
 }

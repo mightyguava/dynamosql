@@ -33,13 +33,13 @@ func (b *Boolean) Capture(values []string) error {
 
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
-	Expression *SelectExpression `"SELECT" @@`
-	From       string            `"FROM" @Ident ( @"." @Ident )*`
-	Where      *AndExpression    `( "WHERE" @@ )?`
-	Limit      *int              `( "LIMIT" @Number )?`
+	Projection *ProjectionExpression `"SELECT" @@`
+	From       string                `"FROM" @Ident ( @"." @Ident )*`
+	Where      *AndExpression        `( "WHERE" @@ )?`
+	Limit      *int                  `( "LIMIT" @Number )?`
 }
 
-type SelectExpression struct {
+type ProjectionExpression struct {
 	All         bool     `  @"*"`
 	Projections []string `| @Ident ( "," @Ident )*`
 }

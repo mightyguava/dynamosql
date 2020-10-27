@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/alecthomas/repr"
@@ -20,9 +22,6 @@ type PreparedQuery struct {
 	FixedParams map[string]interface{}
 }
 
-type KeyExpression struct{}
-type FilterExpression struct{}
-
 func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string) (*PreparedQuery, error) {
 	var ast parser.Select
 	if err := parser.Parser.ParseString(query, &ast); err != nil {
@@ -35,14 +34,51 @@ func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string)
 	return buildQuery(table, ast)
 }
 
+func (pq *PreparedQuery) Build() (*dynamodb.QueryInput, error) {
+	params := make(map[string]*dynamodb.AttributeValue, len(pq.FreeParams)+len(pq.FixedParams))
+	for k, v := range pq.FixedParams {
+		av, err := toAttributeValue(v)
+		if err != nil {
+			return nil, err
+		}
+		params[k] = av
+	}
+	req := *pq.Query
+	req.ExpressionAttributeValues = params
+	return &req, nil
+}
+
+func toAttributeValue(attr interface{}) (*dynamodb.AttributeValue, error) {
+	switch v := attr.(type) {
+	case string:
+		return &dynamodb.AttributeValue{S: &v}, nil
+	case float64:
+		return &dynamodb.AttributeValue{N: aws.String(strconv.FormatFloat(v, 'g', -1, 64))}, nil
+	case bool:
+		return &dynamodb.AttributeValue{BOOL: &v}, nil
+	case nil:
+		return &dynamodb.AttributeValue{NULL: aws.Bool(true)}, nil
+	default:
+		return nil, fmt.Errorf("invalid value type %s", reflect.TypeOf(v))
+	}
+}
+
+type KeyExpression struct{}
+type FilterExpression struct{}
+
 func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
 	visit := &visitor{Context: NewContext(table)}
 	result, err := visit.VisitNodes(ast.Where)
 	if err != nil {
 		return nil, err
 	}
+	var projectionExpr *string
+	if !ast.Projection.All {
+		projectionExpr = aws.String(strings.Join(ast.Projection.Projections, ","))
+	}
 	req := &dynamodb.QueryInput{
 		TableName:              &ast.From,
+		ProjectionExpression:   projectionExpr,
 		KeyConditionExpression: aws.String(result.Key),
 	}
 	if result.Filter != "" {
@@ -237,7 +273,7 @@ func (v *visitor) VisitTerm(n interface{}) string {
 			return name
 		case node.Null:
 			name := v.Context.NextGeneratedParam()
-			v.Context.FixedParams[name] = "NULL"
+			v.Context.FixedParams[name] = nil
 			return name
 		default:
 			panic("invalid value" + repr.String(node))
