@@ -18,12 +18,12 @@ func TestNewTable(t *testing.T) {
 		desc, err := client.DescribeTable(&dynamodb.DescribeTableInput{TableName: &fixtures.Movies.Table})
 		require.NoError(t, err)
 		table := NewTable(desc.Table)
-		require.Same(t, table.Desc, desc.Table)
-		table.Desc = nil
 		expectedTable := &Table{
 			HashKey: "title",
 			SortKey: "year",
 		}
+		require.Equal(t, expectedTable, table)
+		table = NewTableFromCreate(fixtures.Movies.Create)
 		require.Equal(t, expectedTable, table)
 	}
 
@@ -31,8 +31,6 @@ func TestNewTable(t *testing.T) {
 		desc, err := client.DescribeTable(&dynamodb.DescribeTableInput{TableName: &fixtures.GameScores.Table})
 		require.NoError(t, err)
 		table := NewTable(desc.Table)
-		require.Same(t, table.Desc, desc.Table)
-		table.Desc = nil
 		expectedTable := &Table{
 			HashKey: "UserId",
 			SortKey: "GameTitle",
@@ -51,6 +49,8 @@ func TestNewTable(t *testing.T) {
 			},
 		}
 		require.Equal(t, expectedTable, table)
+		table = NewTableFromCreate(fixtures.GameScores.Create)
+		require.Equal(t, expectedTable, table)
 	}
 }
 
@@ -62,7 +62,6 @@ func TestLoadTable(t *testing.T) {
 	table, err := loader.Get(context.Background(), fixtures.Movies.Table)
 	require.NoError(t, err)
 
-	table.Desc = nil
 	expectedTable := &Table{
 		HashKey: "title",
 		SortKey: "year",

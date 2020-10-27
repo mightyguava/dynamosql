@@ -55,10 +55,11 @@ func (d *Driver) OpenConnector(connStr string) (driver.Connector, error) {
 			return nil, err
 		}
 	}
+	dynamo := dynamodb.New(sess)
 	return &connector{
-		dynamo: dynamodb.New(sess),
+		dynamo: dynamo,
 		driver: d,
-		tables: &schema.TableLoader{},
+		tables: schema.NewTableLoader(dynamo),
 	}, nil
 }
 

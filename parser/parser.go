@@ -44,23 +44,62 @@ type SelectExpression struct {
 	Projections []string `| @Ident ( "," @Ident )*`
 }
 
+type visitor func(v interface{})
+
 type ConditionExpression struct {
 	Or []*AndExpression `@@ ( "OR" @@ )*`
+}
+
+func (e *ConditionExpression) Visit(visit visitor) {
+	visit(e)
+	for _, v := range e.Or {
+		visit(v)
+	}
 }
 
 type AndExpression struct {
 	And []*Condition `@@ ( "AND" @@ )*`
 }
 
+func (e *AndExpression) Visit(visit visitor) {
+	visit(e)
+	for _, v := range e.And {
+		visit(v)
+	}
+}
+
 type ParenthesizedExpression struct {
 	ConditionExpression *ConditionExpression
 }
 
+func (e *ParenthesizedExpression) Visit(visit visitor) {
+	visit(e)
+	visit(e.ConditionExpression)
+}
+
 type Condition struct {
 	Parenthesized *ConditionExpression `  "(" @@ ")"`
-	Not           *Condition           `| "NOT" @@`
+	Not           *NotCondition        `| "NOT" @@`
 	Operand       *ConditionOperand    `| @@`
 	Function      *FunctionExpression  `| @@`
+}
+
+type NotCondition struct {
+	Condition *Condition `@@`
+}
+
+func (e *Condition) Visit(visit visitor) {
+	visit(e)
+	switch {
+	case e.Parenthesized != nil:
+		visit(e.Parenthesized)
+	case e.Not != nil:
+		visit(e.Not)
+	case e.Operand != nil:
+		visit(e.Operand)
+	case e.Function != nil:
+		visit(e.Function)
+	}
 }
 
 type FunctionExpression struct {
@@ -74,15 +113,37 @@ type ConditionOperand struct {
 	ConditionRHS *ConditionRHS `@@`
 }
 
+func (o *ConditionOperand) Visit(visit visitor) {
+	visit(o)
+	visit(o.Operand)
+	visit(o.ConditionRHS)
+}
+
 type ConditionRHS struct {
 	Compare *Compare `  @@`
 	Between *Between `| "BETWEEN" @@`
-	In      []Value  `| "(" @@ ( "," @@ )* ")"`
+	In      *In      `| "IN" "(" @@ ")"`
+}
+
+func (o *ConditionRHS) Visit(visit visitor) {
+	visit(o)
+	switch {
+	case o.Compare != nil:
+		visit(o.Compare)
+	case o.Between != nil:
+		visit(o.Between)
+	case o.In != nil:
+		visit(o.In)
+	}
+}
+
+type In struct {
+	Values []Value `@@ ( "," @@ )*`
 }
 
 type Compare struct {
-	Operator string  `@( "<>" | "<=" | ">=" | "=" | "<" | ">" | "!=" )`
-	Operand  Operand `@@`
+	Operator string   `@( "<>" | "<=" | ">=" | "=" | "<" | ">" | "!=" )`
+	Operand  *Operand `@@`
 }
 
 type Between struct {
@@ -91,7 +152,7 @@ type Between struct {
 }
 
 type Operand struct {
-	Value     Value      `  @@`
+	Value     *Value     `  @@`
 	SymbolRef *SymbolRef `| @@`
 }
 

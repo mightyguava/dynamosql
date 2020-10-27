@@ -15,8 +15,6 @@ type Table struct {
 	SortKey                string
 	LocalSecondaryIndexes  []LocalSecondaryIndex
 	GlobalSecondaryIndexes []GlobalSecondaryIndex
-
-	Desc *dynamodb.TableDescription
 }
 
 // NewTable parses a dynamodb.TableDescription into a simplified Table schema
@@ -49,8 +47,45 @@ func NewTable(desc *dynamodb.TableDescription) *Table {
 		SortKey:                sort,
 		LocalSecondaryIndexes:  lsi,
 		GlobalSecondaryIndexes: gsi,
-		Desc:                   desc,
 	}
+}
+
+// NewTableFromCreate parses a dynamodb.CreateTableInput into a simplified Table schema
+func NewTableFromCreate(desc *dynamodb.CreateTableInput) *Table {
+	var lsi []LocalSecondaryIndex
+	if len(desc.LocalSecondaryIndexes) > 0 {
+		lsi = make([]LocalSecondaryIndex, 0, len(desc.LocalSecondaryIndexes))
+		for _, indexDesc := range desc.LocalSecondaryIndexes {
+			index := LocalSecondaryIndex{
+				Name: *indexDesc.IndexName,
+			}
+			_, index.SortKey = parseKeySchema(indexDesc.KeySchema)
+			lsi = append(lsi, index)
+		}
+	}
+	var gsi []GlobalSecondaryIndex
+	if len(desc.GlobalSecondaryIndexes) > 0 {
+		gsi = make([]GlobalSecondaryIndex, 0, len(desc.GlobalSecondaryIndexes))
+		for _, indexDesc := range desc.GlobalSecondaryIndexes {
+			index := GlobalSecondaryIndex{
+				Name: *indexDesc.IndexName,
+			}
+			index.HashKey, index.SortKey = parseKeySchema(indexDesc.KeySchema)
+			gsi = append(gsi, index)
+		}
+	}
+	hash, sort := parseKeySchema(desc.KeySchema)
+	return &Table{
+		HashKey:                hash,
+		SortKey:                sort,
+		LocalSecondaryIndexes:  lsi,
+		GlobalSecondaryIndexes: gsi,
+	}
+}
+
+// IsKey returns whether the attribute is a hash or sort key.
+func (t *Table) IsKey(name string) bool {
+	return t.HashKey == name || t.SortKey == name
 }
 
 func parseKeySchema(schema []*dynamodb.KeySchemaElement) (hash, sort string) {
@@ -82,6 +117,10 @@ type TableLoader struct {
 	dynamo *dynamodb.DynamoDB
 	tables sync.Map
 	load   singleflight.Group
+}
+
+func NewTableLoader(dynamo *dynamodb.DynamoDB) *TableLoader {
+	return &TableLoader{dynamo: dynamo}
 }
 
 // Get retrieves a cached table schema, loading it from DynamoDB if not found.

@@ -13,8 +13,6 @@ import (
 )
 
 func TestGoldenGoodQueries(t *testing.T) {
-	flag.Parse()
-
 	type row struct {
 		Query string
 		AST   Select

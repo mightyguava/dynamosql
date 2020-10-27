@@ -1,0 +1,1 @@
+SELECT * FROM gamescores WHERE UserId = 101
