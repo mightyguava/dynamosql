@@ -43,7 +43,7 @@ func (c conn) QueryContext(ctx context.Context, query string, args []driver.Name
 	if err != nil {
 		return nil, err
 	}
-	req, err := q.Build()
+	req, err := q.Build(args)
 	if err != nil {
 		return nil, err
 	}

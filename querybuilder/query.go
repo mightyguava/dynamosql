@@ -2,6 +2,7 @@ package querybuilder
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"reflect"
@@ -12,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
+	dberr "github.com/mightyguava/dynamosql/errors"
 	"github.com/mightyguava/dynamosql/parser"
 	"github.com/mightyguava/dynamosql/schema"
 )
 
 type PreparedQuery struct {
 	Query       *dynamodb.QueryInput
-	FreeParams  map[string]Empty
+	FreeParams  FreeParams
 	FixedParams map[string]interface{}
 }
 
@@ -34,18 +36,47 @@ func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string)
 	return buildQuery(table, ast)
 }
 
-func (pq *PreparedQuery) Build() (*dynamodb.QueryInput, error) {
-	params := make(map[string]*dynamodb.AttributeValue, len(pq.FreeParams)+len(pq.FixedParams))
+func (pq *PreparedQuery) Build(args []driver.NamedValue) (*dynamodb.QueryInput, error) {
+	values := make(map[string]*dynamodb.AttributeValue, len(pq.FreeParams)+len(pq.FixedParams))
 	for k, v := range pq.FixedParams {
 		av, err := toAttributeValue(v)
 		if err != nil {
 			return nil, err
 		}
-		params[k] = av
+		values[k] = av
+	}
+	if err := bindArgs(pq.FreeParams, args, values); err != nil {
+		return nil, err
 	}
 	req := *pq.Query
-	req.ExpressionAttributeValues = params
+	req.ExpressionAttributeValues = values
 	return &req, nil
+}
+
+func bindArgs(freeParams FreeParams, args []driver.NamedValue, values map[string]*dynamodb.AttributeValue) error {
+	freeParams = freeParams.Clone()
+	for _, arg := range args {
+		if arg.Name == "" {
+			return dberr.ErrPositionalArg
+		}
+		name := ":" + arg.Name
+		_, ok := freeParams[name]
+		if !ok {
+			return fmt.Errorf("binding %q not found", name)
+		}
+		av, err := toAttributeValue(arg.Value)
+		if err != nil {
+			return err
+		}
+		values[name] = av
+		delete(freeParams, name)
+	}
+	if len(freeParams) > 0 {
+		for k := range freeParams {
+			return fmt.Errorf("missing argument for binding %q", k)
+		}
+	}
+	return nil
 }
 
 func toAttributeValue(attr interface{}) (*dynamodb.AttributeValue, error) {
@@ -54,6 +85,8 @@ func toAttributeValue(attr interface{}) (*dynamodb.AttributeValue, error) {
 		return &dynamodb.AttributeValue{S: &v}, nil
 	case float64:
 		return &dynamodb.AttributeValue{N: aws.String(strconv.FormatFloat(v, 'g', -1, 64))}, nil
+	case int64:
+		return &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(v, 10))}, nil
 	case bool:
 		return &dynamodb.AttributeValue{BOOL: &v}, nil
 	case nil:
@@ -65,6 +98,16 @@ func toAttributeValue(attr interface{}) (*dynamodb.AttributeValue, error) {
 
 type KeyExpression struct{}
 type FilterExpression struct{}
+
+type FreeParams map[string]Empty
+
+func (p FreeParams) Clone() FreeParams {
+	copy := make(FreeParams)
+	for k, v := range p {
+		copy[k] = v
+	}
+	return copy
+}
 
 func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
 	visit := &visitor{Context: NewContext(table)}

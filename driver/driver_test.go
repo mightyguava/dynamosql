@@ -29,5 +29,17 @@ func TestDriver(t *testing.T) {
 		require.NoError(t, err)
 		scores = append(scores, s)
 	}
+
+	rows, err = db.Query(`SELECT GameTitle, TopScore FROM gamescores WHERE UserId = :UserId AND GameTitle > :GameTitle`,
+		sql.Named("UserId", "101"),
+		sql.Named("GameTitle", "Meteor"))
+	require.NoError(t, err)
+
+	for rows.Next() {
+		var s fixtures.GameScore
+		err = rows.Scan(&s.GameTitle, &s.TopScore)
+		require.NoError(t, err)
+		scores = append(scores, s)
+	}
 	repr.Println(scores)
 }
