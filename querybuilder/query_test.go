@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,8 +17,8 @@ import (
 
 func TestBuildQuery(t *testing.T) {
 	type item struct {
-		Query   string
-		Request *dynamodb.QueryInput
+		Query    string
+		Prepared *PreparedQuery
 	}
 	table := schema.NewTableFromCreate(fixtures.GameScores.Create)
 
@@ -36,13 +35,12 @@ func TestBuildQuery(t *testing.T) {
 		query, err := buildQuery(table, ast)
 		require.NoError(t, err)
 		parsed = append(parsed, item{
-			Query:   queryStr,
-			Request: query.Query,
+			Query:    queryStr,
+			Prepared: query,
 		})
 	}
 
 	g := goldie.New(t,
-		goldie.WithDiffEngine(goldie.ColoredDiff),
 		goldie.WithFixtureDir("testdata/golden"),
 		goldie.WithNameSuffix(".golden.json"))
 	for i, q := range parsed {

@@ -16,7 +16,8 @@ import (
 )
 
 type PreparedQuery struct {
-	Query *dynamodb.QueryInput
+	Query      *dynamodb.QueryInput
+	FreeParams map[string]Empty
 }
 
 type KeyExpression struct{}
@@ -35,26 +36,34 @@ func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string)
 }
 
 func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
-	visit := &visitor{Context: &Context{Table: table}}
+	visit := &visitor{Context: NewContext(table)}
 	result, err := visit.VisitNodes(ast.Where)
 	if err != nil {
 		return nil, err
 	}
-	expressionValues := make(map[string]*dynamodb.AttributeValue)
 	req := &dynamodb.QueryInput{
-		TableName:                 &ast.From,
-		KeyConditionExpression:    aws.String(result.Key),
-		ExpressionAttributeValues: expressionValues,
+		TableName:              &ast.From,
+		KeyConditionExpression: aws.String(result.Key),
 	}
 	if result.Filter != "" {
 		req.FilterExpression = aws.String(result.Filter)
 	}
-	return &PreparedQuery{Query: req}, nil
+	return &PreparedQuery{Query: req, FreeParams: visit.Context.Params}, nil
 }
 
 type Context struct {
-	Table *schema.Table
+	Table  *schema.Table
+	Params map[string]Empty
 }
+
+func NewContext(table *schema.Table) *Context {
+	return &Context{
+		Table:  table,
+		Params: make(map[string]Empty),
+	}
+}
+
+type Empty struct{}
 
 type Acc struct {
 	Key    string
@@ -198,6 +207,7 @@ func (v *visitor) VisitTerm(n interface{}) string {
 	case *parser.Value:
 		switch {
 		case node.PlaceHolder != nil:
+			v.Context.Params[*node.PlaceHolder] = Empty{}
 			return *node.PlaceHolder
 		case node.Number != nil:
 			return strconv.FormatFloat(*node.Number, 'g', -1, 64)
