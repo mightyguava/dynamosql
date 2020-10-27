@@ -179,7 +179,7 @@ func (v *visitor) VisitTerm(n interface{}) string {
 	case *parser.Compare:
 		return node.Operator + " " + v.VisitTerm(node.Operand)
 	case *parser.Between:
-		return fmt.Sprintf(" BETWEEN %s AND %s",
+		return fmt.Sprintf("BETWEEN %s AND %s",
 			v.VisitTerm(node.Start), v.VisitTerm(node.End))
 	case *parser.In:
 		return fmt.Sprintf(" IN (%s)", v.VisitTerm(node.Values))
@@ -198,7 +198,7 @@ func (v *visitor) VisitTerm(n interface{}) string {
 	case *parser.Value:
 		switch {
 		case node.PlaceHolder != nil:
-			return ":" + *node.PlaceHolder
+			return *node.PlaceHolder
 		case node.Number != nil:
 			return strconv.FormatFloat(*node.Number, 'g', -1, 64)
 		case node.String != nil:

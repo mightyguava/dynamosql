@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT * FROM gamescores WHERE UserId = 101",
+  "Query": "SELECT * FROM gamescores WHERE UserId = :UserId",
   "Request": {
     "AttributesToGet": null,
     "ConditionalOperator": null,
@@ -9,7 +9,7 @@
     "ExpressionAttributeValues": {},
     "FilterExpression": null,
     "IndexName": null,
-    "KeyConditionExpression": "UserId = 101",
+    "KeyConditionExpression": "UserId = :UserId",
     "KeyConditions": null,
     "Limit": null,
     "ProjectionExpression": null,

@@ -11,3 +11,5 @@ require (
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 )
+
+replace github.com/sebdah/goldie/v2 => github.com/mightyguava/goldie/v2 v2.5.2-0.20201027035444-df66e94788ee
