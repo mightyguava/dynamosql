@@ -5,5 +5,6 @@ SHELL := /bin/bash
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
-dynalite:
-	cd ./testing/dynalite && docker build -t dynalite .
+dynamodb:
+	docker run --name dynamodb -d -p 8000:8000 amazon/dynamodb-local
+.PHONY: dynamodb

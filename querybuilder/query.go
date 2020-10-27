@@ -37,15 +37,8 @@ func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string)
 }
 
 func (pq *PreparedQuery) Build(args []driver.NamedValue) (*dynamodb.QueryInput, error) {
-	values := make(map[string]*dynamodb.AttributeValue, len(pq.FreeParams)+len(pq.FixedParams))
-	for k, v := range pq.FixedParams {
-		av, err := toAttributeValue(v)
-		if err != nil {
-			return nil, err
-		}
-		values[k] = av
-	}
-	if err := bindArgs(pq.FreeParams, args, values); err != nil {
+	values, err := bindArgs(pq.FixedParams, pq.FreeParams, args)
+	if err != nil {
 		return nil, err
 	}
 	req := *pq.Query
@@ -53,30 +46,42 @@ func (pq *PreparedQuery) Build(args []driver.NamedValue) (*dynamodb.QueryInput, 
 	return &req, nil
 }
 
-func bindArgs(freeParams FreeParams, args []driver.NamedValue, values map[string]*dynamodb.AttributeValue) error {
+func bindArgs(fixedParams map[string]interface{}, freeParams FreeParams, args []driver.NamedValue) (map[string]*dynamodb.AttributeValue, error) {
+	values := make(map[string]*dynamodb.AttributeValue, len(freeParams)+len(fixedParams))
+
+	// Bind fixed params
+	for k, v := range fixedParams {
+		av, err := toAttributeValue(v)
+		if err != nil {
+			return nil, err
+		}
+		values[k] = av
+	}
+
+	// Bind free params using the args
 	freeParams = freeParams.Clone()
 	for _, arg := range args {
 		if arg.Name == "" {
-			return dberr.ErrPositionalArg
+			return nil, dberr.ErrPositionalArg
 		}
 		name := ":" + arg.Name
 		_, ok := freeParams[name]
 		if !ok {
-			return fmt.Errorf("binding %q not found", name)
+			return nil, fmt.Errorf("binding %q not found", name)
 		}
 		av, err := toAttributeValue(arg.Value)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		values[name] = av
 		delete(freeParams, name)
 	}
 	if len(freeParams) > 0 {
 		for k := range freeParams {
-			return fmt.Errorf("missing argument for binding %q", k)
+			return nil, fmt.Errorf("missing argument for binding %q", k)
 		}
 	}
-	return nil
+	return values, nil
 }
 
 func toAttributeValue(attr interface{}) (*dynamodb.AttributeValue, error) {
