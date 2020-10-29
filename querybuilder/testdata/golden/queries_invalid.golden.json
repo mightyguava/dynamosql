@@ -26,5 +26,9 @@
   {
     "Query": "SELECT * FROM gamescores WHERE NOT UserId = :UserId",
     "Error": "WHERE must contain a top-level equality condition on the hash key, such as: WHERE UserId = :param"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId > :UserId",
+    "Error": "hash key \"UserId\" must appear in an equality (=) condition, not \">\""
   }
 ]

@@ -203,8 +203,13 @@ func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error)
 			expr = visitor.VisitSimpleExpression(subExpr.Function)
 			key = subExpr.Function.PathArgument
 		} else {
-			expr = visitor.VisitSimpleExpression(subExpr.Operand)
 			key = subExpr.Operand.Operand.Symbol
+			if key == ctx.Table.HashKey {
+				if subExpr.Operand.ConditionRHS.Compare == nil || subExpr.Operand.ConditionRHS.Compare.Operator != "=" {
+					return "", fmt.Errorf("hash key %q must appear in an equality (=) condition, not %q", ctx.Table.HashKey, subExpr.Operand.ConditionRHS.Compare.Operator)
+				}
+			}
+			expr = visitor.VisitSimpleExpression(subExpr.Operand)
 		}
 		if ctx.Table.HashKey == key {
 			if hashExpr != "" {

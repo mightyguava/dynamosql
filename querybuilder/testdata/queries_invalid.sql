@@ -12,5 +12,5 @@ SELECT * FROM gamescores WHERE UserId = :UserId OR Wins = 3
 SELECT * FROM gamescores WHERE UserId = :UserId AND (Wins = 3 OR UserId = "105")
 -- Partition key may not appear in a NOT expression
 SELECT * FROM gamescores WHERE NOT UserId = :UserId
--- -- Partition key must be in an equality condition
--- SELECT * FROM gamescores WHERE UserId > :UserId
+-- Partition key must be in an equality condition
+SELECT * FROM gamescores WHERE UserId > :UserId
