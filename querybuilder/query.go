@@ -206,14 +206,14 @@ func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error)
 			key = subExpr.Operand.Operand.Symbol
 			if key == ctx.Table.HashKey {
 				if subExpr.Operand.ConditionRHS.Compare == nil || subExpr.Operand.ConditionRHS.Compare.Operator != "=" {
-					return "", fmt.Errorf("hash key %q must appear in an equality (=) condition, not %q", ctx.Table.HashKey, subExpr.Operand.ConditionRHS.Compare.Operator)
+					return "", fmt.Errorf("partition key %q must appear in an equality (=) condition, not %q", ctx.Table.HashKey, subExpr.Operand.ConditionRHS.Compare.Operator)
 				}
 			}
 			expr = visitor.VisitSimpleExpression(subExpr.Operand)
 		}
 		if ctx.Table.HashKey == key {
 			if hashExpr != "" {
-				return "", fmt.Errorf("hash key %q can only appear once in WHERE clause", key)
+				return "", fmt.Errorf("partition key %q can only appear once in WHERE clause", key)
 			}
 			hashExpr = expr
 		} else if ctx.Table.SortKey == key {
@@ -224,7 +224,7 @@ func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error)
 		}
 	}
 	if hashExpr == "" {
-		return "", fmt.Errorf("WHERE must contain a top-level equality condition on the hash key, such as: WHERE %s = :param", ctx.Table.HashKey)
+		return "", fmt.Errorf("WHERE must contain a top-level equality condition on the partition key, such as: WHERE %s = :param", ctx.Table.HashKey)
 	}
 	if sortExpr != "" {
 		return hashExpr + " AND " + sortExpr, nil
@@ -282,12 +282,12 @@ func (v *visitor) VisitFilterExpression(n interface{}) (string, error) {
 		switch {
 		case node.Operand != nil:
 			if v.Context.Table.IsKey(node.Operand.Operand.Symbol) {
-				return "", fmt.Errorf("hash key %q may not appear in nested expression", node.Operand.Operand.Symbol)
+				return "", fmt.Errorf("partition key %q may not appear in nested expression", node.Operand.Operand.Symbol)
 			}
 			return v.VisitSimpleExpression(node.Operand), nil
 		case node.Function != nil:
 			if v.Context.Table.IsKey(node.Function.PathArgument) {
-				return "", fmt.Errorf("hash key %q may not appear in nested expression", node.Function.PathArgument)
+				return "", fmt.Errorf("partition key %q may not appear in nested expression", node.Function.PathArgument)
 			}
 			return v.VisitSimpleExpression(node.Function), nil
 		case node.Not != nil:

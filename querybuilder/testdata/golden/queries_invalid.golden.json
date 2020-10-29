@@ -30,5 +30,13 @@
   {
     "Query": "SELECT * FROM gamescores WHERE UserId > :UserId",
     "Error": "hash key \"UserId\" must appear in an equality (=) condition, not \">\""
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND UserId = :UserId2",
+    "Error": "hash key \"UserId\" can only appear once in WHERE clause"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND GameTitle = \"A\" AND GameTitle = \"B\"",
+    "Error": "sort key \"GameTitle\" can only appear once in WHERE clause"
   }
 ]

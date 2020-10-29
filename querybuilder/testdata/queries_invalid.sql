@@ -14,3 +14,7 @@ SELECT * FROM gamescores WHERE UserId = :UserId AND (Wins = 3 OR UserId = "105")
 SELECT * FROM gamescores WHERE NOT UserId = :UserId
 -- Partition key must be in an equality condition
 SELECT * FROM gamescores WHERE UserId > :UserId
+-- Partition key may not appear twice
+SELECT * FROM gamescores WHERE UserId = :UserId AND UserId = :UserId2
+-- Sort key may not appear twice
+SELECT * FROM gamescores WHERE UserId = :UserId AND GameTitle = "A" AND GameTitle = "B"
