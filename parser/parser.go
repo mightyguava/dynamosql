@@ -69,7 +69,7 @@ func (e *AndExpression) Visit(visit visitor) {
 }
 
 type ParenthesizedExpression struct {
-	ConditionExpression *ConditionExpression
+	ConditionExpression *ConditionExpression `@@`
 }
 
 func (e *ParenthesizedExpression) Visit(visit visitor) {
@@ -78,10 +78,10 @@ func (e *ParenthesizedExpression) Visit(visit visitor) {
 }
 
 type Condition struct {
-	Parenthesized *ConditionExpression `  "(" @@ ")"`
-	Not           *NotCondition        `| "NOT" @@`
-	Operand       *ConditionOperand    `| @@`
-	Function      *FunctionExpression  `| @@`
+	Parenthesized *ParenthesizedExpression `  "(" @@ ")"`
+	Not           *NotCondition            `| "NOT" @@`
+	Operand       *ConditionOperand        `| @@`
+	Function      *FunctionExpression      `| @@`
 }
 
 type NotCondition struct {

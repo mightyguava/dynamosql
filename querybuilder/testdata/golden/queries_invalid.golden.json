@@ -1,0 +1,34 @@
+[
+  {
+    "Query": "SELECT * FROM gamescores",
+    "Error": "WHERE must contain an equality condition on the hash key: UserId = <value|parameter>"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE Wins = 3",
+    "Error": "WHERE must contain an equality condition on the hash key: UserId = <value|parameter>"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId = \"101\" AND Wins = ?",
+    "Error": "1:58: invalid token '?'"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId = \"101\" AND Wins = $1",
+    "Error": "1:58: invalid token '$'"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId = :UserId OR Wins = 3",
+    "Error": "1:49: unexpected token \"OR\""
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND (Wins = 3 OR UserId = \"105\")",
+    "Error": "primary key cannot appear in a nested expression"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE NOT UserId = :UserId",
+    "Error": "primary key cannot appear in NOT expression"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId > :UserId",
+    "Error": ""
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "Query": "SELECT * FROM gamescores WHERE UserId = \"101\" AND TopScore > 30",
+  "Results": [
+    "GameTitle,Losses,TopScore,UserId,Wins",
+    "Galaxy Invaders,72,5842,101,21",
+    "Meteor Blasters,3,1000,101,12"
+  ]
+}

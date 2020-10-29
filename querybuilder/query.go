@@ -13,9 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
-	dberr "github.com/mightyguava/dynamosql/errors"
 	"github.com/mightyguava/dynamosql/parser"
 	"github.com/mightyguava/dynamosql/schema"
+)
+
+var (
+	errPositionalArg = errors.New("positional args not supported, use sql.NamedArg to pass named arguments")
 )
 
 type PreparedQuery struct {
@@ -62,7 +65,7 @@ func bindArgs(fixedParams map[string]interface{}, freeParams FreeParams, args []
 	freeParams = freeParams.Clone()
 	for _, arg := range args {
 		if arg.Name == "" {
-			return nil, dberr.ErrPositionalArg
+			return nil, errPositionalArg
 		}
 		name := ":" + arg.Name
 		_, ok := freeParams[name]
@@ -116,9 +119,12 @@ func (p FreeParams) Clone() FreeParams {
 
 func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
 	visit := &visitor{Context: NewContext(table)}
-	result, err := visit.VisitNodes(ast.Where)
+	result, err := visit.VisitExpressionNode(ast.Where)
 	if err != nil {
 		return nil, err
+	}
+	if result.Key == "" {
+		return nil, fmt.Errorf("WHERE must contain an equality condition on the hash key: %s = <value|parameter>", table.HashKey)
 	}
 	var projectionExpr *string
 	if !ast.Projection.All {
@@ -172,12 +178,16 @@ type visitor struct {
 	*Context
 }
 
-func (v *visitor) VisitNodes(n interface{}) (Acc, error) {
+// VisitExpressionNode visits all compound expressions.
+func (v *visitor) VisitExpressionNode(n interface{}) (Acc, error) {
+	if reflect.ValueOf(n).IsNil() {
+		return Acc{}, nil
+	}
 	switch node := n.(type) {
 	case *parser.ConditionExpression:
-		var filter, key []string
+		var filter []string
 		for _, expr := range node.Or {
-			acc, err := v.VisitNodes(expr)
+			acc, err := v.VisitExpressionNode(expr)
 			if err != nil {
 				return Acc{}, err
 			}
@@ -185,16 +195,16 @@ func (v *visitor) VisitNodes(n interface{}) (Acc, error) {
 				filter = append(filter, acc.Filter)
 			}
 			if acc.Key != "" {
-				return Acc{}, errors.New("primary key cannot appear in OR expression")
+				return Acc{}, errors.New("primary key cannot appear in a nested expression")
 			}
 		}
 		return Acc{
-			Filter: strings.Join(key, " OR "),
+			Filter: strings.Join(filter, " OR "),
 		}, nil
 	case *parser.AndExpression:
 		var filter, key []string
 		for _, expr := range node.And {
-			acc, err := v.VisitNodes(expr)
+			acc, err := v.VisitExpressionNode(expr)
 			if err != nil {
 				return Acc{}, err
 			}
@@ -212,7 +222,7 @@ func (v *visitor) VisitNodes(n interface{}) (Acc, error) {
 	case *parser.Condition:
 		switch {
 		case node.Operand != nil:
-			expr := v.VisitTerm(node.Operand)
+			expr := v.VisitSimpleExpression(node.Operand)
 			if v.Table.IsKey(node.Operand.Operand.Symbol) {
 				return Acc{
 					Key: expr,
@@ -223,16 +233,21 @@ func (v *visitor) VisitNodes(n interface{}) (Acc, error) {
 				}, nil
 			}
 		case node.Function != nil:
-			return v.VisitNodes(node.Function)
+			return v.VisitExpressionNode(node.Function)
 		case node.Not != nil:
-			return v.VisitNodes(node.Not)
+			return v.VisitExpressionNode(node.Not)
 		case node.Parenthesized != nil:
-			return v.VisitNodes(node.Parenthesized)
+			return v.VisitExpressionNode(node.Parenthesized)
 		default:
 			panic("invalid condition subtype")
 		}
 	case *parser.ParenthesizedExpression:
-		acc, err := v.VisitNodes(node.ConditionExpression)
+		if len(node.ConditionExpression.Or) == 0 {
+			return Acc{}, nil
+		} else if len(node.ConditionExpression.Or) == 1 {
+			return v.VisitExpressionNode(node.ConditionExpression.Or[0])
+		}
+		acc, err := v.VisitExpressionNode(node.ConditionExpression)
 		if err != nil {
 			return Acc{}, err
 		}
@@ -241,7 +256,7 @@ func (v *visitor) VisitNodes(n interface{}) (Acc, error) {
 			Filter: "(" + acc.Filter + ")",
 		}, nil
 	case *parser.NotCondition:
-		acc, err := v.VisitNodes(node.Condition)
+		acc, err := v.VisitExpressionNode(node.Condition)
 		if err != nil {
 			return Acc{}, err
 		}
@@ -253,7 +268,7 @@ func (v *visitor) VisitNodes(n interface{}) (Acc, error) {
 		}, nil
 	case *parser.FunctionExpression:
 		args := node.PathArgument
-		more := v.VisitTerm(node.MoreArguments)
+		more := v.VisitSimpleExpression(node.MoreArguments)
 		if more != "" {
 			args = args + "," + more
 		}
@@ -268,39 +283,40 @@ func (v *visitor) VisitNodes(n interface{}) (Acc, error) {
 	}
 }
 
-func (v *visitor) VisitTerm(n interface{}) string {
+// VisitSimpleExpression visits unary and binary expressions down to the leaf nodes.
+func (v *visitor) VisitSimpleExpression(n interface{}) string {
 	switch node := n.(type) {
 	case *parser.ConditionOperand:
-		return node.Operand.Symbol + " " + v.VisitTerm(node.ConditionRHS)
+		return node.Operand.Symbol + " " + v.VisitSimpleExpression(node.ConditionRHS)
 	case *parser.ConditionRHS:
 		switch {
 		case node.Compare != nil:
-			return v.VisitTerm(node.Compare)
+			return v.VisitSimpleExpression(node.Compare)
 		case node.Between != nil:
-			return v.VisitTerm(node.Between)
+			return v.VisitSimpleExpression(node.Between)
 		case node.In != nil:
-			return v.VisitTerm(node.In)
+			return v.VisitSimpleExpression(node.In)
 		default:
 			panic("invalid rhs")
 		}
 	case *parser.Compare:
-		return node.Operator + " " + v.VisitTerm(node.Operand)
+		return node.Operator + " " + v.VisitSimpleExpression(node.Operand)
 	case *parser.Between:
 		return fmt.Sprintf("BETWEEN %s AND %s",
-			v.VisitTerm(node.Start), v.VisitTerm(node.End))
+			v.VisitSimpleExpression(node.Start), v.VisitSimpleExpression(node.End))
 	case *parser.In:
-		return fmt.Sprintf(" IN (%s)", v.VisitTerm(node.Values))
+		return fmt.Sprintf(" IN (%s)", v.VisitSimpleExpression(node.Values))
 	case []parser.Value:
 		var values []string
 		for _, value := range node {
-			values = append(values, v.VisitTerm(value))
+			values = append(values, v.VisitSimpleExpression(value))
 		}
 		return strings.Join(values, ",")
 	case *parser.Operand:
 		if node.SymbolRef != nil {
 			return node.SymbolRef.Symbol
 		} else {
-			return v.VisitTerm(node.Value)
+			return v.VisitSimpleExpression(node.Value)
 		}
 	case *parser.Value:
 		switch {
