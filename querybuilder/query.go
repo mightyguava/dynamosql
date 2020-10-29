@@ -118,13 +118,16 @@ func (p FreeParams) Clone() FreeParams {
 }
 
 func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
-	visit := &visitor{Context: NewContext(table)}
-	result, err := visit.VisitExpressionNode(ast.Where)
+	ctx := NewContext(table)
+	visit := &visitor{Context: ctx}
+	kf := extractKeyExpressions(ast.Where, table.IsKey)
+	keyExpr, err := buildKeyExpression(ctx, kf.Key)
 	if err != nil {
 		return nil, err
 	}
-	if result.Key == "" {
-		return nil, fmt.Errorf("WHERE must contain an equality condition on the hash key: %s = <value|parameter>", table.HashKey)
+	filterExpr, err := buildFilterExpression(ctx, kf.Filter)
+	if err != nil {
+		return nil, err
 	}
 	var projectionExpr *string
 	if !ast.Projection.All {
@@ -133,10 +136,10 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	req := &dynamodb.QueryInput{
 		TableName:              &ast.From,
 		ProjectionExpression:   projectionExpr,
-		KeyConditionExpression: aws.String(result.Key),
+		KeyConditionExpression: aws.String(keyExpr),
 	}
-	if result.Filter != "" {
-		req.FilterExpression = aws.String(result.Filter)
+	if filterExpr != "" {
+		req.FilterExpression = aws.String(filterExpr)
 	}
 	return &PreparedQuery{
 		Query:       req,
@@ -167,6 +170,68 @@ func (c *Context) NextGeneratedParam() string {
 	return fmt.Sprintf(":_gen%d", c.genParamCount)
 }
 
+type keyAndFilter struct {
+	Key    *parser.AndExpression
+	Filter *parser.AndExpression
+}
+
+func extractKeyExpressions(expr *parser.AndExpression, isKey func(string) bool) *keyAndFilter {
+	v := &keyAndFilter{
+		Key:    &parser.AndExpression{},
+		Filter: &parser.AndExpression{},
+	}
+	if expr == nil {
+		return v
+	}
+	for _, term := range expr.And {
+		if term.Operand != nil && isKey(term.Operand.Operand.Symbol) ||
+			term.Function != nil && isKey(term.Function.PathArgument) {
+			v.Key.And = append(v.Key.And, term)
+		} else {
+			v.Filter.And = append(v.Filter.And, term)
+		}
+	}
+	return v
+}
+
+func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error) {
+	var hashExpr, sortExpr string
+	visitor := &visitor{Context: ctx}
+	for _, subExpr := range key.And {
+		var expr, key string
+		if subExpr.Function != nil {
+			expr = visitor.VisitSimpleExpression(subExpr.Function)
+			key = subExpr.Function.PathArgument
+		} else {
+			expr = visitor.VisitSimpleExpression(subExpr.Operand)
+			key = subExpr.Operand.Operand.Symbol
+		}
+		if ctx.Table.HashKey == key {
+			if hashExpr != "" {
+				return "", fmt.Errorf("hash key %q can only appear once in WHERE clause", key)
+			}
+			hashExpr = expr
+		} else if ctx.Table.SortKey == key {
+			if sortExpr != "" {
+				return "", fmt.Errorf("sort key %q can only appear once in WHERE clause", key)
+			}
+			sortExpr = expr
+		}
+	}
+	if hashExpr == "" {
+		return "", fmt.Errorf("WHERE must contain a top-level equality condition on the hash key, such as: WHERE %s = :param", ctx.Table.HashKey)
+	}
+	if sortExpr != "" {
+		return hashExpr + " AND " + sortExpr, nil
+	}
+	return hashExpr, nil
+}
+
+func buildFilterExpression(ctx *Context, filter *parser.AndExpression) (string, error) {
+	v := &visitor{Context: ctx}
+	return v.VisitFilterExpression(filter)
+}
+
 type Empty struct{}
 
 type Acc struct {
@@ -178,106 +243,67 @@ type visitor struct {
 	*Context
 }
 
-// VisitExpressionNode visits all compound expressions.
-func (v *visitor) VisitExpressionNode(n interface{}) (Acc, error) {
+// VisitFilterExpression visits all nodes in the filter expression tree to build a filter expression.
+func (v *visitor) VisitFilterExpression(n interface{}) (string, error) {
 	if reflect.ValueOf(n).IsNil() {
-		return Acc{}, nil
+		return "", nil
 	}
 	switch node := n.(type) {
 	case *parser.ConditionExpression:
-		var filter []string
+		filter := make([]string, 0, len(node.Or))
 		for _, expr := range node.Or {
-			acc, err := v.VisitExpressionNode(expr)
+			acc, err := v.VisitFilterExpression(expr)
 			if err != nil {
-				return Acc{}, err
+				return "", err
 			}
-			if acc.Filter != "" {
-				filter = append(filter, acc.Filter)
-			}
-			if acc.Key != "" {
-				return Acc{}, errors.New("primary key cannot appear in a nested expression")
+			if acc != "" {
+				filter = append(filter, acc)
 			}
 		}
-		return Acc{
-			Filter: strings.Join(filter, " OR "),
-		}, nil
+		return strings.Join(filter, " OR "), nil
 	case *parser.AndExpression:
-		var filter, key []string
+		filter := make([]string, 0, len(node.And))
 		for _, expr := range node.And {
-			acc, err := v.VisitExpressionNode(expr)
+			acc, err := v.VisitFilterExpression(expr)
 			if err != nil {
-				return Acc{}, err
+				return "", err
 			}
-			if acc.Filter != "" {
-				filter = append(filter, acc.Filter)
-			}
-			if acc.Key != "" {
-				key = append(key, acc.Key)
+			if acc != "" {
+				filter = append(filter, acc)
 			}
 		}
-		return Acc{
-			Key:    strings.Join(key, " AND "),
-			Filter: strings.Join(filter, " AND "),
-		}, nil
+		return strings.Join(filter, " AND "), nil
 	case *parser.Condition:
 		switch {
 		case node.Operand != nil:
-			expr := v.VisitSimpleExpression(node.Operand)
-			if v.Table.IsKey(node.Operand.Operand.Symbol) {
-				return Acc{
-					Key: expr,
-				}, nil
-			} else {
-				return Acc{
-					Filter: expr,
-				}, nil
+			if v.Context.Table.IsKey(node.Operand.Operand.Symbol) {
+				return "", fmt.Errorf("hash key %q may not appear in nested expression", node.Operand.Operand.Symbol)
 			}
+			return v.VisitSimpleExpression(node.Operand), nil
 		case node.Function != nil:
-			return v.VisitExpressionNode(node.Function)
+			if v.Context.Table.IsKey(node.Function.PathArgument) {
+				return "", fmt.Errorf("hash key %q may not appear in nested expression", node.Function.PathArgument)
+			}
+			return v.VisitSimpleExpression(node.Function), nil
 		case node.Not != nil:
-			return v.VisitExpressionNode(node.Not)
+			return v.VisitFilterExpression(node.Not)
 		case node.Parenthesized != nil:
-			return v.VisitExpressionNode(node.Parenthesized)
+			return v.VisitFilterExpression(node.Parenthesized)
 		default:
 			panic("invalid condition subtype")
 		}
 	case *parser.ParenthesizedExpression:
-		if len(node.ConditionExpression.Or) == 0 {
-			return Acc{}, nil
-		} else if len(node.ConditionExpression.Or) == 1 {
-			return v.VisitExpressionNode(node.ConditionExpression.Or[0])
-		}
-		acc, err := v.VisitExpressionNode(node.ConditionExpression)
+		acc, err := v.VisitFilterExpression(node.ConditionExpression)
 		if err != nil {
-			return Acc{}, err
+			return "", err
 		}
-		return Acc{
-			Key:    "(" + acc.Key + ")",
-			Filter: "(" + acc.Filter + ")",
-		}, nil
+		return "(" + acc + ")", nil
 	case *parser.NotCondition:
-		acc, err := v.VisitExpressionNode(node.Condition)
+		acc, err := v.VisitFilterExpression(node.Condition)
 		if err != nil {
-			return Acc{}, err
+			return "", err
 		}
-		if acc.Key != "" {
-			return Acc{}, errors.New("primary key cannot appear in NOT expression")
-		}
-		return Acc{
-			Filter: "NOT " + acc.Filter,
-		}, nil
-	case *parser.FunctionExpression:
-		args := node.PathArgument
-		more := v.VisitSimpleExpression(node.MoreArguments)
-		if more != "" {
-			args = args + "," + more
-		}
-		expr := fmt.Sprintf("%s(%s)", node.Function, args)
-		if v.Table.IsKey(node.PathArgument) {
-			return Acc{Key: expr}, nil
-		} else {
-			return Acc{Filter: expr}, nil
-		}
+		return "NOT " + acc, nil
 	default:
 		panic("invalid type " + repr.String(node))
 	}
@@ -288,6 +314,13 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 	switch node := n.(type) {
 	case *parser.ConditionOperand:
 		return node.Operand.Symbol + " " + v.VisitSimpleExpression(node.ConditionRHS)
+	case *parser.FunctionExpression:
+		args := node.PathArgument
+		more := v.VisitSimpleExpression(node.MoreArguments)
+		if more != "" {
+			args = args + "," + more
+		}
+		return fmt.Sprintf("%s(%s)", node.Function, args)
 	case *parser.ConditionRHS:
 		switch {
 		case node.Compare != nil:
@@ -306,7 +339,7 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 			v.VisitSimpleExpression(node.Start), v.VisitSimpleExpression(node.End))
 	case *parser.In:
 		return fmt.Sprintf(" IN (%s)", v.VisitSimpleExpression(node.Values))
-	case []parser.Value:
+	case []*parser.Value:
 		var values []string
 		for _, value := range node {
 			values = append(values, v.VisitSimpleExpression(value))

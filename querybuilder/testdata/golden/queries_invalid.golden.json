@@ -1,11 +1,11 @@
 [
   {
     "Query": "SELECT * FROM gamescores",
-    "Error": "WHERE must contain an equality condition on the hash key: UserId = <value|parameter>"
+    "Error": "WHERE must contain a top-level equality condition on the hash key, such as: WHERE UserId = :param"
   },
   {
     "Query": "SELECT * FROM gamescores WHERE Wins = 3",
-    "Error": "WHERE must contain an equality condition on the hash key: UserId = <value|parameter>"
+    "Error": "WHERE must contain a top-level equality condition on the hash key, such as: WHERE UserId = :param"
   },
   {
     "Query": "SELECT * FROM gamescores WHERE UserId = \"101\" AND Wins = ?",
@@ -21,14 +21,10 @@
   },
   {
     "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND (Wins = 3 OR UserId = \"105\")",
-    "Error": "primary key cannot appear in a nested expression"
+    "Error": "hash key \"UserId\" may not appear in nested expression"
   },
   {
     "Query": "SELECT * FROM gamescores WHERE NOT UserId = :UserId",
-    "Error": "primary key cannot appear in NOT expression"
-  },
-  {
-    "Query": "SELECT * FROM gamescores WHERE UserId > :UserId",
-    "Error": ""
+    "Error": "WHERE must contain a top-level equality condition on the hash key, such as: WHERE UserId = :param"
   }
 ]

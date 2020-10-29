@@ -1,0 +1,29 @@
+{
+  "Query": "SELECT * FROM gamescores WHERE UserId = \"103\" AND begins_with(GameTitle, \"Galaxy\")",
+  "Prepared": {
+    "Query": {
+      "AttributesToGet": null,
+      "ConditionalOperator": null,
+      "ConsistentRead": null,
+      "ExclusiveStartKey": null,
+      "ExpressionAttributeNames": null,
+      "ExpressionAttributeValues": null,
+      "FilterExpression": null,
+      "IndexName": null,
+      "KeyConditionExpression": "UserId = :_gen1 AND begins_with(GameTitle,:_gen2)",
+      "KeyConditions": null,
+      "Limit": null,
+      "ProjectionExpression": null,
+      "QueryFilter": null,
+      "ReturnConsumedCapacity": null,
+      "ScanIndexForward": null,
+      "Select": null,
+      "TableName": "gamescores"
+    },
+    "FreeParams": {},
+    "FixedParams": {
+      ":_gen1": "103",
+      ":_gen2": "Galaxy"
+    }
+  }
+}

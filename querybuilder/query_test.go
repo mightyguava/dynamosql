@@ -32,6 +32,10 @@ func TestBuildQuery(t *testing.T) {
 	for scanner.Scan() {
 		var ast parser.Select
 		queryStr := scanner.Text()
+		if strings.HasPrefix(queryStr, "--") {
+			// skip comments
+			continue
+		}
 		err := parser.Parser.ParseString(queryStr, &ast)
 		assert.NoError(t, err, "Parse: %s", queryStr)
 		query, err := buildQuery(table, ast)

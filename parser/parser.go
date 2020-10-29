@@ -103,9 +103,9 @@ func (e *Condition) Visit(visit visitor) {
 }
 
 type FunctionExpression struct {
-	Function      string  `@Function`
-	PathArgument  string  `"(" @Ident`
-	MoreArguments []Value `    ( "," @@ )* ")"`
+	Function      string   `@Function`
+	PathArgument  string   `"(" @Ident`
+	MoreArguments []*Value `    ( "," @@ )* ")"`
 }
 
 type ConditionOperand struct {
