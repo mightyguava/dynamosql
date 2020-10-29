@@ -50,31 +50,12 @@ type ConditionExpression struct {
 	Or []*AndExpression `@@ ( "OR" @@ )*`
 }
 
-func (e *ConditionExpression) Visit(visit visitor) {
-	visit(e)
-	for _, v := range e.Or {
-		visit(v)
-	}
-}
-
 type AndExpression struct {
 	And []*Condition `@@ ( "AND" @@ )*`
 }
 
-func (e *AndExpression) Visit(visit visitor) {
-	visit(e)
-	for _, v := range e.And {
-		visit(v)
-	}
-}
-
 type ParenthesizedExpression struct {
 	ConditionExpression *ConditionExpression `@@`
-}
-
-func (e *ParenthesizedExpression) Visit(visit visitor) {
-	visit(e)
-	visit(e.ConditionExpression)
 }
 
 type Condition struct {
@@ -88,20 +69,6 @@ type NotCondition struct {
 	Condition *Condition `@@`
 }
 
-func (e *Condition) Visit(visit visitor) {
-	visit(e)
-	switch {
-	case e.Parenthesized != nil:
-		visit(e.Parenthesized)
-	case e.Not != nil:
-		visit(e.Not)
-	case e.Operand != nil:
-		visit(e.Operand)
-	case e.Function != nil:
-		visit(e.Function)
-	}
-}
-
 type FunctionExpression struct {
 	Function      string   `@Function`
 	PathArgument  string   `"(" @Ident`
@@ -113,28 +80,10 @@ type ConditionOperand struct {
 	ConditionRHS *ConditionRHS `@@`
 }
 
-func (o *ConditionOperand) Visit(visit visitor) {
-	visit(o)
-	visit(o.Operand)
-	visit(o.ConditionRHS)
-}
-
 type ConditionRHS struct {
 	Compare *Compare `  @@`
 	Between *Between `| "BETWEEN" @@`
 	In      *In      `| "IN" "(" @@ ")"`
-}
-
-func (o *ConditionRHS) Visit(visit visitor) {
-	visit(o)
-	switch {
-	case o.Compare != nil:
-		visit(o.Compare)
-	case o.Between != nil:
-		visit(o.Between)
-	case o.In != nil:
-		visit(o.In)
-	}
 }
 
 type In struct {

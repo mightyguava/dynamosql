@@ -384,24 +384,3 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 		panic("invalid term: " + repr.String(node))
 	}
 }
-
-//type visitor func(ctx Context, v interface{})
-//
-//func visitAndExpression(and *parser.AndExpression) {
-//	for _, expr := range and.And {
-//		switch {
-//		case expr.Operand != nil:
-//			visitOperand(ctx, expr.Operand)
-//		case expr.Function != nil:
-//		case expr.Not != nil:
-//		case expr.Parenthesized != nil:
-//		}
-//	}
-//}
-//
-//func visitOperand(ctx Context, operand *parser.ConditionOperand) {
-//	operand.ConditionRHS
-//	if ctx.Table.IsKey(operand.Operand.Symbol) {
-//		ctx.KeyCondition =
-//	}
-//}
