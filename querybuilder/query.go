@@ -194,19 +194,30 @@ func extractKeyExpressions(expr *parser.AndExpression, isKey func(string) bool) 
 	return v
 }
 
+type errHashKey string
+
+func (hashKey errHashKey) Error() string {
+	return fmt.Sprintf("partition key must appear exactly once in the WHERE clause, in an equality condition, such as: WHERE %s = :param", string(hashKey))
+}
+
 func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error) {
 	var hashExpr, sortExpr string
 	visitor := &visitor{Context: ctx}
 	for _, subExpr := range key.And {
 		var expr, key string
 		if subExpr.Function != nil {
-			expr = visitor.VisitSimpleExpression(subExpr.Function)
 			key = subExpr.Function.PathArgument
+			if ctx.Table.HashKey == key {
+				return "", errHashKey(ctx.Table.HashKey)
+			} else if subExpr.Function.Function != "begins_with" {
+				return "", fmt.Errorf("sort key %q may not be used with function %s()", key, subExpr.Function.Function)
+			}
+			expr = visitor.VisitSimpleExpression(subExpr.Function)
 		} else {
 			key = subExpr.Operand.Operand.Symbol
 			if key == ctx.Table.HashKey {
 				if subExpr.Operand.ConditionRHS.Compare == nil || subExpr.Operand.ConditionRHS.Compare.Operator != "=" {
-					return "", fmt.Errorf("partition key %q must appear in an equality (=) condition, not %q", ctx.Table.HashKey, subExpr.Operand.ConditionRHS.Compare.Operator)
+					return "", errHashKey(ctx.Table.HashKey)
 				}
 			}
 			expr = visitor.VisitSimpleExpression(subExpr.Operand)
@@ -224,7 +235,7 @@ func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error)
 		}
 	}
 	if hashExpr == "" {
-		return "", fmt.Errorf("WHERE must contain a top-level equality condition on the partition key, such as: WHERE %s = :param", ctx.Table.HashKey)
+		return "", errHashKey(ctx.Table.HashKey)
 	}
 	if sortExpr != "" {
 		return hashExpr + " AND " + sortExpr, nil

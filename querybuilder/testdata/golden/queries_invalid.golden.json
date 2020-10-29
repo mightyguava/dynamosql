@@ -1,11 +1,11 @@
 [
   {
     "Query": "SELECT * FROM gamescores",
-    "Error": "WHERE must contain a top-level equality condition on the hash key, such as: WHERE UserId = :param"
+    "Error": "partition key must appear exactly once in the WHERE clause, in an equality condition, such as: WHERE UserId = :param"
   },
   {
     "Query": "SELECT * FROM gamescores WHERE Wins = 3",
-    "Error": "WHERE must contain a top-level equality condition on the hash key, such as: WHERE UserId = :param"
+    "Error": "partition key must appear exactly once in the WHERE clause, in an equality condition, such as: WHERE UserId = :param"
   },
   {
     "Query": "SELECT * FROM gamescores WHERE UserId = \"101\" AND Wins = ?",
@@ -21,22 +21,30 @@
   },
   {
     "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND (Wins = 3 OR UserId = \"105\")",
-    "Error": "hash key \"UserId\" may not appear in nested expression"
+    "Error": "partition key \"UserId\" may not appear in nested expression"
   },
   {
     "Query": "SELECT * FROM gamescores WHERE NOT UserId = :UserId",
-    "Error": "WHERE must contain a top-level equality condition on the hash key, such as: WHERE UserId = :param"
+    "Error": "partition key must appear exactly once in the WHERE clause, in an equality condition, such as: WHERE UserId = :param"
   },
   {
     "Query": "SELECT * FROM gamescores WHERE UserId > :UserId",
-    "Error": "hash key \"UserId\" must appear in an equality (=) condition, not \">\""
+    "Error": "partition key must appear exactly once in the WHERE clause, in an equality condition, such as: WHERE UserId = :param"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE begins_with(UserId, 5)",
+    "Error": "partition key must appear exactly once in the WHERE clause, in an equality condition, such as: WHERE UserId = :param"
   },
   {
     "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND UserId = :UserId2",
-    "Error": "hash key \"UserId\" can only appear once in WHERE clause"
+    "Error": "partition key \"UserId\" can only appear once in WHERE clause"
   },
   {
     "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND GameTitle = \"A\" AND GameTitle = \"B\"",
     "Error": "sort key \"GameTitle\" can only appear once in WHERE clause"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND attribute_exists(GameTitle)",
+    "Error": "sort key \"GameTitle\" may not be used with function attribute_exists()"
   }
 ]
