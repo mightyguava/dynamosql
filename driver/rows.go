@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-type Rows struct {
+type rows struct {
 	req  *dynamodb.QueryInput
 	resp *dynamodb.QueryOutput
 
@@ -20,9 +20,11 @@ type Rows struct {
 	nextRow int
 }
 
-var _ driver.Rows = &Rows{}
+var _ driver.Rows = &rows{}
 
-func (r *Rows) Columns() []string {
+// Returns the number of columns.
+// Caveat: the number of columns is always equal to the number of attributes in the first returned item.
+func (r *rows) Columns() []string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -44,11 +46,11 @@ func (r *Rows) Columns() []string {
 	return cols
 }
 
-func (r *Rows) Close() error {
+func (r *rows) Close() error {
 	return nil
 }
 
-func (r *Rows) Next(dest []driver.Value) error {
+func (r *rows) Next(dest []driver.Value) error {
 	cols := r.Columns()
 	if r.nextRow >= len(r.resp.Items) {
 		return io.EOF
