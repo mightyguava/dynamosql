@@ -8,3 +8,6 @@ MAKEFLAGS += --no-builtin-rules
 dynamodb:
 	docker run --name dynamodb -d -p 8000:8000 amazon/dynamodb-local
 .PHONY: dynamodb
+
+test:
+	go test -p 1 ./...

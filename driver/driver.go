@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"sync"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -19,9 +18,6 @@ func init() {
 // Driver is the DynamoDB SQL driver.
 type Driver struct {
 	cfg Config
-
-	cfgOnce *sync.Once
-	openErr error
 }
 
 var _ driver.Driver = &Driver{}

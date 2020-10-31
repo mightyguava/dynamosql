@@ -18,6 +18,7 @@ type Table struct {
 }
 
 // NewTable parses a dynamodb.TableDescription into a simplified Table schema
+// nolint: dupl
 func NewTable(desc *dynamodb.TableDescription) *Table {
 	var lsi []LocalSecondaryIndex
 	if len(desc.LocalSecondaryIndexes) > 0 {
@@ -51,6 +52,7 @@ func NewTable(desc *dynamodb.TableDescription) *Table {
 }
 
 // NewTableFromCreate parses a dynamodb.CreateTableInput into a simplified Table schema
+// nolint: dupl
 func NewTableFromCreate(desc *dynamodb.CreateTableInput) *Table {
 	var lsi []LocalSecondaryIndex
 	if len(desc.LocalSecondaryIndexes) > 0 {

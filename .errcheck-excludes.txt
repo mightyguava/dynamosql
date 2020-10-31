@@ -1,0 +1,2 @@
+(io.Writer).Write
+(io.Closer).Close

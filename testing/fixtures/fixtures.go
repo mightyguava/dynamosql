@@ -35,7 +35,6 @@ func SetUp(t *testing.T, fixtures ...Fixture) *session.Session {
 				t.Errorf("unexpected error deleting table %q: %s", fixture.Table, err)
 			}
 		}
-
 	}
 	cleanup()
 	t.Cleanup(cleanup)

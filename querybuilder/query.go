@@ -364,9 +364,8 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 	case *parser.Operand:
 		if node.SymbolRef != nil {
 			return node.SymbolRef.Symbol
-		} else {
-			return v.VisitSimpleExpression(node.Value)
 		}
+		return v.VisitSimpleExpression(node.Value)
 	case *parser.Value:
 		switch {
 		case node.PlaceHolder != nil:
