@@ -1,7 +1,7 @@
 {
   "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\" AND (year BETWEEN 2009 AND 2015 OR actor = \"Will Smith\")",
   "AST": {
-    "Expression": {
+    "Projection": {
       "All": false,
       "Projections": [
         "title",
@@ -40,79 +40,81 @@
         },
         {
           "Parenthesized": {
-            "Or": [
-              {
-                "And": [
-                  {
-                    "Parenthesized": null,
-                    "Not": null,
-                    "Operand": {
+            "ConditionExpression": {
+              "Or": [
+                {
+                  "And": [
+                    {
+                      "Parenthesized": null,
+                      "Not": null,
                       "Operand": {
-                        "Symbol": "year"
-                      },
-                      "ConditionRHS": {
-                        "Compare": null,
-                        "Between": {
-                          "Start": {
-                            "Value": {
-                              "PlaceHolder": null,
-                              "Number": 2009,
-                              "String": null,
-                              "Boolean": null,
-                              "Null": false
+                        "Operand": {
+                          "Symbol": "year"
+                        },
+                        "ConditionRHS": {
+                          "Compare": null,
+                          "Between": {
+                            "Start": {
+                              "Value": {
+                                "PlaceHolder": null,
+                                "Number": 2009,
+                                "String": null,
+                                "Boolean": null,
+                                "Null": false
+                              },
+                              "SymbolRef": null
                             },
-                            "SymbolRef": null
+                            "End": {
+                              "Value": {
+                                "PlaceHolder": null,
+                                "Number": 2015,
+                                "String": null,
+                                "Boolean": null,
+                                "Null": false
+                              },
+                              "SymbolRef": null
+                            }
                           },
-                          "End": {
-                            "Value": {
-                              "PlaceHolder": null,
-                              "Number": 2015,
-                              "String": null,
-                              "Boolean": null,
-                              "Null": false
-                            },
-                            "SymbolRef": null
-                          }
-                        },
-                        "In": null
-                      }
-                    },
-                    "Function": null
-                  }
-                ]
-              },
-              {
-                "And": [
-                  {
-                    "Parenthesized": null,
-                    "Not": null,
-                    "Operand": {
-                      "Operand": {
-                        "Symbol": "actor"
+                          "In": null
+                        }
                       },
-                      "ConditionRHS": {
-                        "Compare": {
-                          "Operator": "=",
-                          "Operand": {
-                            "Value": {
-                              "PlaceHolder": null,
-                              "Number": null,
-                              "String": "Will Smith",
-                              "Boolean": null,
-                              "Null": false
-                            },
-                            "SymbolRef": null
-                          }
+                      "Function": null
+                    }
+                  ]
+                },
+                {
+                  "And": [
+                    {
+                      "Parenthesized": null,
+                      "Not": null,
+                      "Operand": {
+                        "Operand": {
+                          "Symbol": "actor"
                         },
-                        "Between": null,
-                        "In": null
-                      }
-                    },
-                    "Function": null
-                  }
-                ]
-              }
-            ]
+                        "ConditionRHS": {
+                          "Compare": {
+                            "Operator": "=",
+                            "Operand": {
+                              "Value": {
+                                "PlaceHolder": null,
+                                "Number": null,
+                                "String": "Will Smith",
+                                "Boolean": null,
+                                "Null": false
+                              },
+                              "SymbolRef": null
+                            }
+                          },
+                          "Between": null,
+                          "In": null
+                        }
+                      },
+                      "Function": null
+                    }
+                  ]
+                }
+              ]
+            }
           },
           "Not": null,
           "Operand": null,

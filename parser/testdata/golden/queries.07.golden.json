@@ -1,7 +1,7 @@
 {
   "Query": "SELECT * FROM movies WHERE title = :title",
   "AST": {
-    "Expression": {
+    "Projection": {
       "All": true,
       "Projections": null
     },

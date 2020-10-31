@@ -1,7 +1,7 @@
 {
   "Query": "SELECT * FROM movies WHERE title = :title AND begins_with(actor, \"Will\")",
   "AST": {
-    "Expression": {
+    "Projection": {
       "All": true,
       "Projections": null
     },

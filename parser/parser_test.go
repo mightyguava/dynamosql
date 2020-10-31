@@ -35,10 +35,10 @@ func TestGoldenGoodQueries(t *testing.T) {
 	}
 
 	g := goldie.New(t,
-		goldie.WithDiffEngine(goldie.ColoredDiff),
 		goldie.WithFixtureDir("testdata/golden"),
 		goldie.WithNameSuffix(".golden.json"))
 	for i, q := range parsed {
+		t.Logf("Query: %s", q.Query)
 		g.AssertJson(t, fmt.Sprintf("queries.%02d", i), q)
 	}
 }
@@ -68,7 +68,6 @@ func TestGoldenBadQueries(t *testing.T) {
 	}
 
 	g := goldie.New(t,
-		goldie.WithDiffEngine(goldie.ColoredDiff),
 		goldie.WithFixtureDir("testdata/golden"),
 		goldie.WithNameSuffix(".golden.json"))
 	for i, q := range parsed {

@@ -44,8 +44,6 @@ type ProjectionExpression struct {
 	Projections []string `| @Ident ( "," @Ident )*`
 }
 
-type visitor func(v interface{})
-
 type ConditionExpression struct {
 	Or []*AndExpression `@@ ( "OR" @@ )*`
 }
