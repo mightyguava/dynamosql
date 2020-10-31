@@ -1,0 +1,19 @@
+# action.yml
+name: 'Go Migrate'
+description: 'Runs migrate/migrate'
+inputs:
+  migrations-path:
+    description: 'Path to migrations SQL files'
+    required: true
+  database-url:
+    description: url to database
+    required: true
+runs:
+  using: 'docker'
+  image: 'migrate/migrate'
+  args:
+    - -path
+    - ${{ inputs.migrations-path }}
+    - -database
+    - ${{ inputs.database-url }}
+    - up
