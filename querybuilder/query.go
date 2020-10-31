@@ -131,7 +131,7 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	}
 	var projectionExpr *string
 	if !ast.Projection.All {
-		projectionExpr = aws.String(strings.Join(ast.Projection.Projections, ","))
+		projectionExpr = aws.String(ast.Projection.String())
 	}
 	req := &dynamodb.QueryInput{
 		TableName:              &ast.From,

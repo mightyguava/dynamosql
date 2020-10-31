@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\"",
+  "Query": "SELECT Studio.Name, Studio.Name.FirstName, Studio.Employees[3] FROM gamescores WHERE UserId = :UserId",
   "AST": {
     "Projection": {
       "All": false,
@@ -7,20 +7,39 @@
         {
           "Fragment": [
             {
-              "Symbol": "title"
+              "Symbol": "Studio"
+            },
+            {
+              "Symbol": "Name"
             }
           ]
         },
         {
           "Fragment": [
             {
-              "Symbol": "year"
+              "Symbol": "Studio"
+            },
+            {
+              "Symbol": "Name"
+            },
+            {
+              "Symbol": "FirstName"
+            }
+          ]
+        },
+        {
+          "Fragment": [
+            {
+              "Symbol": "Studio"
+            },
+            {
+              "Symbol": "Employees[3]"
             }
           ]
         }
       ]
     },
-    "From": "movies",
+    "From": "gamescores",
     "Where": {
       "And": [
         {
@@ -28,16 +47,16 @@
           "Not": null,
           "Operand": {
             "Operand": {
-              "Symbol": "title"
+              "Symbol": "UserId"
             },
             "ConditionRHS": {
               "Compare": {
                 "Operator": "=",
                 "Operand": {
                   "Value": {
-                    "PlaceHolder": null,
+                    "PlaceHolder": ":UserId",
                     "Number": null,
-                    "String": "The Dark Knight",
+                    "String": null,
                     "Boolean": null,
                     "Null": false
                   },

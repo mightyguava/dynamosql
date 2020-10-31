@@ -11,3 +11,6 @@ dynamodb:
 
 test:
 	go test -p 1 ./...
+
+lint:
+	golangci-lint run --config .golangci.yml

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/alecthomas/repr"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,7 +38,7 @@ func TestBuildQuery(t *testing.T) {
 			continue
 		}
 		err := parser.Parser.ParseString(queryStr, &ast)
-		assert.NoError(t, err, "Parse: %s", queryStr)
+		require.NoError(t, err, "Parse: %s: %s", queryStr, repr.String(ast))
 		query, err := buildQuery(table, ast)
 		require.NoError(t, err)
 		parsed = append(parsed, item{

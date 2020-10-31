@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -26,6 +27,10 @@ func TestGoldenGoodQueries(t *testing.T) {
 	for scanner.Scan() {
 		var ast Select
 		query := scanner.Text()
+		if strings.HasPrefix(query, "--") {
+			// skip comments
+			continue
+		}
 		err := Parser.ParseString(query, &ast)
 		assert.NoError(t, err, "Parse: %s", query)
 		parsed = append(parsed, row{
@@ -59,6 +64,10 @@ func TestGoldenBadQueries(t *testing.T) {
 	for scanner.Scan() {
 		var ast Select
 		query := scanner.Text()
+		if strings.HasPrefix(query, "--") {
+			// skip comments
+			continue
+		}
 		err := Parser.ParseString(query, &ast)
 		require.Errorf(t, err, "Parse %s, expected error but did not", query)
 		parsed = append(parsed, row{

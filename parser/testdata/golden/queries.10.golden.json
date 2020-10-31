@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\"",
+  "Query": "SELECT UserId, TopScore FROM gamescores WHERE UserId = :UserId",
   "AST": {
     "Projection": {
       "All": false,
@@ -7,20 +7,20 @@
         {
           "Fragment": [
             {
-              "Symbol": "title"
+              "Symbol": "UserId"
             }
           ]
         },
         {
           "Fragment": [
             {
-              "Symbol": "year"
+              "Symbol": "TopScore"
             }
           ]
         }
       ]
     },
-    "From": "movies",
+    "From": "gamescores",
     "Where": {
       "And": [
         {
@@ -28,16 +28,16 @@
           "Not": null,
           "Operand": {
             "Operand": {
-              "Symbol": "title"
+              "Symbol": "UserId"
             },
             "ConditionRHS": {
               "Compare": {
                 "Operator": "=",
                 "Operand": {
                   "Value": {
-                    "PlaceHolder": null,
+                    "PlaceHolder": ":UserId",
                     "Number": null,
-                    "String": "The Dark Knight",
+                    "String": null,
                     "Boolean": null,
                     "Null": false
                   },

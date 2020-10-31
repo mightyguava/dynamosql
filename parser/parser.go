@@ -2,6 +2,8 @@
 package parser
 
 import (
+	"bytes"
+
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
 )
@@ -11,6 +13,7 @@ var (
 		`|(?P<Keyword>(?i)SELECT|FROM|WHERE|MINUS|EXCEPT|INTERSECT|ORDER|LIMIT|OFFSET|TRUE|FALSE|NULL|IS|NOT|ANY|SOME|BETWEEN|AND|OR|AS)` +
 		`|(?P<Function>(?i)attribute_exists|attribute_not_exists|attribute_type|begins_with|contains|size)` +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
+		`|(?P<IndexArray>(\[\d\])+)` +
 		`|(?P<NamedParameter>:[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
@@ -40,8 +43,21 @@ type Select struct {
 }
 
 type ProjectionExpression struct {
-	All         bool     `  @"*"`
-	Projections []string `| @Ident ( "," @Ident )*`
+	All         bool           `  @"*"`
+	Projections []DocumentPath `| @@ ( "," @@ )*`
+}
+
+func (e ProjectionExpression) String() string {
+	if e.All {
+		return ""
+	}
+	buf := &bytes.Buffer{}
+	buf.WriteString(e.Projections[0].String())
+	for _, p := range e.Projections[1:] {
+		buf.WriteString(", ")
+		buf.WriteString(p.String())
+	}
+	return buf.String()
 }
 
 type ConditionExpression struct {
@@ -103,8 +119,26 @@ type Operand struct {
 	SymbolRef *SymbolRef `| @@`
 }
 
+type DocumentPath struct {
+	Fragment []PathFragment `@@ ( "." @@)*`
+}
+
+func (p DocumentPath) String() string {
+	buf := &bytes.Buffer{}
+	buf.WriteString(p.Fragment[0].Symbol)
+	for _, f := range p.Fragment[1:] {
+		buf.WriteRune('.')
+		buf.WriteString(f.Symbol)
+	}
+	return buf.String()
+}
+
 type SymbolRef struct {
 	Symbol string `@Ident @{ "." Ident }`
+}
+
+type PathFragment struct {
+	Symbol string `@Ident @IndexArray*`
 }
 
 type Value struct {

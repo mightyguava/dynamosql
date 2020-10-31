@@ -1,0 +1,104 @@
+{
+  "Query": "SELECT UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.Country, Studio.Employees[3] FROM gamescores WHERE UserId = :UserId",
+  "AST": {
+    "Projection": {
+      "All": false,
+      "Projections": [
+        {
+          "Fragment": [
+            {
+              "Symbol": "UserId"
+            }
+          ]
+        },
+        {
+          "Fragment": [
+            {
+              "Symbol": "TopScore"
+            }
+          ]
+        },
+        {
+          "Fragment": [
+            {
+              "Symbol": "Scores[3]"
+            }
+          ]
+        },
+        {
+          "Fragment": [
+            {
+              "Symbol": "Scores[3][2]"
+            }
+          ]
+        },
+        {
+          "Fragment": [
+            {
+              "Symbol": "Studio"
+            },
+            {
+              "Symbol": "Name"
+            }
+          ]
+        },
+        {
+          "Fragment": [
+            {
+              "Symbol": "Studio"
+            },
+            {
+              "Symbol": "Location"
+            },
+            {
+              "Symbol": "Country"
+            }
+          ]
+        },
+        {
+          "Fragment": [
+            {
+              "Symbol": "Studio"
+            },
+            {
+              "Symbol": "Employees[3]"
+            }
+          ]
+        }
+      ]
+    },
+    "From": "gamescores",
+    "Where": {
+      "And": [
+        {
+          "Parenthesized": null,
+          "Not": null,
+          "Operand": {
+            "Operand": {
+              "Symbol": "UserId"
+            },
+            "ConditionRHS": {
+              "Compare": {
+                "Operator": "=",
+                "Operand": {
+                  "Value": {
+                    "PlaceHolder": ":UserId",
+                    "Number": null,
+                    "String": null,
+                    "Boolean": null,
+                    "Null": false
+                  },
+                  "SymbolRef": null
+                }
+              },
+              "Between": null,
+              "In": null
+            }
+          },
+          "Function": null
+        }
+      ]
+    },
+    "Limit": null
+  }
+}

@@ -8,3 +8,12 @@ SELECT title, year FROM movies WHERE title = "The Dark Knight" AND (year BETWEEN
 SELECT * FROM movies WHERE title = :title
 SELECT * FROM movies WHERE title = :title AND attribute_exists(year)
 SELECT * FROM movies WHERE title = :title AND begins_with(actor, "Will")
+-- Projection tests https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.Attributes.html
+-- Standard projection
+SELECT UserId, TopScore FROM gamescores WHERE UserId = :UserId
+-- List projections
+SELECT Scores[3], Scores[3][2] FROM gamescores WHERE UserId = :UserId
+-- Map element
+SELECT Studio.Name, Studio.Name.FirstName, Studio.Employees[3] FROM gamescores WHERE UserId = :UserId
+-- All the projections
+SELECT UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.Country, Studio.Employees[3] FROM gamescores WHERE UserId = :UserId

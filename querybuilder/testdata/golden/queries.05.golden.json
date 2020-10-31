@@ -1,0 +1,28 @@
+{
+  "Query": "SELECT UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.Country, Studio.Employees[3] FROM gamescores WHERE UserId = :UserId",
+  "Prepared": {
+    "Query": {
+      "AttributesToGet": null,
+      "ConditionalOperator": null,
+      "ConsistentRead": null,
+      "ExclusiveStartKey": null,
+      "ExpressionAttributeNames": null,
+      "ExpressionAttributeValues": null,
+      "FilterExpression": null,
+      "IndexName": null,
+      "KeyConditionExpression": "UserId = :UserId",
+      "KeyConditions": null,
+      "Limit": null,
+      "ProjectionExpression": "UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.Country, Studio.Employees[3]",
+      "QueryFilter": null,
+      "ReturnConsumedCapacity": null,
+      "ScanIndexForward": null,
+      "Select": null,
+      "TableName": "gamescores"
+    },
+    "FreeParams": {
+      ":UserId": {}
+    },
+    "FixedParams": {}
+  }
+}

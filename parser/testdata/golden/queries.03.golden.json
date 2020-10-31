@@ -4,8 +4,20 @@
     "Projection": {
       "All": false,
       "Projections": [
-        "title",
-        "year"
+        {
+          "Fragment": [
+            {
+              "Symbol": "title"
+            }
+          ]
+        },
+        {
+          "Fragment": [
+            {
+              "Symbol": "year"
+            }
+          ]
+        }
       ]
     },
     "From": "movies",
