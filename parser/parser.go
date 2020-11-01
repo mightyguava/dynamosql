@@ -42,8 +42,8 @@ type Select struct {
 }
 
 type ProjectionExpression struct {
-	All     bool               `  @"*"`
-	Columns []ProjectionColumn `| @@ ( "," @@ )*`
+	All     bool                `  @"*"`
+	Columns []*ProjectionColumn `| @@ ( "," @@ )*`
 }
 
 func (e ProjectionExpression) String() string {
@@ -60,8 +60,8 @@ func (e ProjectionExpression) String() string {
 }
 
 type ProjectionColumn struct {
-	DocumentPath *DocumentPath       `  @@`
-	Function     *FunctionExpression `| @@`
+	Function     *FunctionExpression `  @@`
+	DocumentPath *DocumentPath       `| @@`
 }
 
 func (c ProjectionColumn) String() string {

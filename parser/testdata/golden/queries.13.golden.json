@@ -5,46 +5,47 @@
       "All": false,
       "Columns": [
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
                 "Symbol": "UserId"
               }
             ]
-          },
-          "Function": null
+          }
         },
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
                 "Symbol": "TopScore"
               }
             ]
-          },
-          "Function": null
+          }
         },
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
                 "Symbol": "Scores[3]"
               }
             ]
-          },
-          "Function": null
+          }
         },
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
                 "Symbol": "Scores[3][2]"
               }
             ]
-          },
-          "Function": null
+          }
         },
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
@@ -54,10 +55,10 @@
                 "Symbol": "Name"
               }
             ]
-          },
-          "Function": null
+          }
         },
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
@@ -70,10 +71,10 @@
                 "Symbol": "Country"
               }
             ]
-          },
-          "Function": null
+          }
         },
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
@@ -83,8 +84,7 @@
                 "Symbol": "Employees[3]"
               }
             ]
-          },
-          "Function": null
+          }
         }
       ]
     },

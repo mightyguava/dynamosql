@@ -1,6 +1,7 @@
 package querybuilder
 
 import (
+	"bytes"
 	"context"
 	"database/sql/driver"
 	"errors"
@@ -23,7 +24,7 @@ var (
 
 type PreparedQuery struct {
 	Query       *dynamodb.QueryInput
-	Columns     []parser.ProjectionColumn
+	Columns     []*parser.ProjectionColumn
 	FreeParams  FreeParams
 	FixedParams map[string]interface{}
 }
@@ -132,7 +133,11 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	}
 	var projectionExpr *string
 	if !ast.Projection.All {
-		projectionExpr = aws.String(ast.Projection.String())
+		expr, err := buildProjectionExpression(ast.Projection)
+		if err != nil {
+			return nil, err
+		}
+		projectionExpr = aws.String(expr)
 	}
 	req := &dynamodb.QueryInput{
 		TableName:              &ast.From,
@@ -201,10 +206,6 @@ type errHashKey string
 func (hashKey errHashKey) Error() string {
 	return fmt.Sprintf("partition key must appear exactly once in the WHERE clause, in an equality condition, such as: WHERE %s = :param", string(hashKey))
 }
-
-//func buildProjectionExpression(expr *parser.ProjectionExpression) (string, error) {
-//
-//}
 
 func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error) {
 	var hashExpr, sortExpr string
@@ -397,4 +398,43 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 	default:
 		panic("visitor does not recognize type " + reflect.TypeOf(node).String())
 	}
+}
+
+func buildProjectionExpression(expr *parser.ProjectionExpression) (string, error) {
+	cols := make([]*parser.DocumentPath, 0, len(expr.Columns))
+	for _, col := range expr.Columns {
+		if col.DocumentPath != nil {
+			cols = append(cols, col.DocumentPath)
+		} else if col.Function != nil {
+			fc, err := extractProjectionsFromFunction(col.Function)
+			if err != nil {
+				return "", err
+			}
+			cols = append(cols, fc...)
+		} else {
+			return "", fmt.Errorf("unexpected ProjectionColumn %v", *col)
+		}
+	}
+	buf := &bytes.Buffer{}
+	for i, col := range cols {
+		if i != 0 {
+			buf.WriteString(", ")
+		}
+		buf.WriteString(col.String())
+	}
+	return buf.String(), nil
+}
+
+func extractProjectionsFromFunction(expr *parser.FunctionExpression) ([]*parser.DocumentPath, error) {
+	if expr.Function != "document" {
+		return nil, fmt.Errorf("function %q not allowed in projection", expr.Function)
+	}
+	cols := make([]*parser.DocumentPath, 0, len(expr.Args))
+	for _, arg := range expr.Args {
+		if arg.DocumentPath == nil {
+			return nil, fmt.Errorf("args to document() must be document paths, got %s", arg.String())
+		}
+		cols = append(cols, arg.DocumentPath)
+	}
+	return cols, nil
 }

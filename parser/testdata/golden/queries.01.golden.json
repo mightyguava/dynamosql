@@ -5,24 +5,24 @@
       "All": false,
       "Columns": [
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
                 "Symbol": "title"
               }
             ]
-          },
-          "Function": null
+          }
         },
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
                 "Symbol": "year"
               }
             ]
-          },
-          "Function": null
+          }
         }
       ]
     },

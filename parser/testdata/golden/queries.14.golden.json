@@ -1,0 +1,133 @@
+{
+  "Query": "SELECT document(UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.Country, Studio.Employees[3]) FROM gamescores WHERE UserId = :UserId",
+  "AST": {
+    "Projection": {
+      "All": false,
+      "Columns": [
+        {
+          "Function": {
+            "Function": "document",
+            "Args": [
+              {
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "UserId"
+                    }
+                  ]
+                },
+                "Value": null
+              },
+              {
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "TopScore"
+                    }
+                  ]
+                },
+                "Value": null
+              },
+              {
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "Scores[3]"
+                    }
+                  ]
+                },
+                "Value": null
+              },
+              {
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "Scores[3][2]"
+                    }
+                  ]
+                },
+                "Value": null
+              },
+              {
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "Studio"
+                    },
+                    {
+                      "Symbol": "Name"
+                    }
+                  ]
+                },
+                "Value": null
+              },
+              {
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "Studio"
+                    },
+                    {
+                      "Symbol": "Location"
+                    },
+                    {
+                      "Symbol": "Country"
+                    }
+                  ]
+                },
+                "Value": null
+              },
+              {
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "Studio"
+                    },
+                    {
+                      "Symbol": "Employees[3]"
+                    }
+                  ]
+                },
+                "Value": null
+              }
+            ]
+          },
+          "DocumentPath": null
+        }
+      ]
+    },
+    "From": "gamescores",
+    "Where": {
+      "And": [
+        {
+          "Parenthesized": null,
+          "Not": null,
+          "Operand": {
+            "Operand": {
+              "Symbol": "UserId"
+            },
+            "ConditionRHS": {
+              "Compare": {
+                "Operator": "=",
+                "Operand": {
+                  "Value": {
+                    "PlaceHolder": ":UserId",
+                    "Number": null,
+                    "String": null,
+                    "Boolean": null,
+                    "Null": false
+                  },
+                  "SymbolRef": null
+                }
+              },
+              "Between": null,
+              "In": null
+            }
+          },
+          "Function": null
+        }
+      ]
+    },
+    "Limit": null
+  }
+}

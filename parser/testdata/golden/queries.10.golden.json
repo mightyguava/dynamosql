@@ -5,24 +5,24 @@
       "All": false,
       "Columns": [
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
                 "Symbol": "UserId"
               }
             ]
-          },
-          "Function": null
+          }
         },
         {
+          "Function": null,
           "DocumentPath": {
             "Fragment": [
               {
                 "Symbol": "TopScore"
               }
             ]
-          },
-          "Function": null
+          }
         }
       ]
     },

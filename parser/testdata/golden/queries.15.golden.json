@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT Studio.Name, Studio.Name.FirstName, Studio.Employees[3] FROM gamescores WHERE UserId = :UserId",
+  "Query": "SELECT UserId, document(TopScore) FROM gamescores WHERE UserId = :UserId",
   "AST": {
     "Projection": {
       "All": false,
@@ -9,42 +9,28 @@
           "DocumentPath": {
             "Fragment": [
               {
-                "Symbol": "Studio"
-              },
-              {
-                "Symbol": "Name"
+                "Symbol": "UserId"
               }
             ]
           }
         },
         {
-          "Function": null,
-          "DocumentPath": {
-            "Fragment": [
+          "Function": {
+            "Function": "document",
+            "Args": [
               {
-                "Symbol": "Studio"
-              },
-              {
-                "Symbol": "Name"
-              },
-              {
-                "Symbol": "FirstName"
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "TopScore"
+                    }
+                  ]
+                },
+                "Value": null
               }
             ]
-          }
-        },
-        {
-          "Function": null,
-          "DocumentPath": {
-            "Fragment": [
-              {
-                "Symbol": "Studio"
-              },
-              {
-                "Symbol": "Employees[3]"
-              }
-            ]
-          }
+          },
+          "DocumentPath": null
         }
       ]
     },

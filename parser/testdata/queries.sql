@@ -17,3 +17,7 @@ SELECT Scores[3], Scores[3][2] FROM gamescores WHERE UserId = :UserId
 SELECT Studio.Name, Studio.Name.FirstName, Studio.Employees[3] FROM gamescores WHERE UserId = :UserId
 -- All the projections
 SELECT UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.Country, Studio.Employees[3] FROM gamescores WHERE UserId = :UserId
+-- Project fields as document
+SELECT document(UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.Country, Studio.Employees[3]) FROM gamescores WHERE UserId = :UserId
+-- Project fields and document
+SELECT UserId, document(TopScore) FROM gamescores WHERE UserId = :UserId
