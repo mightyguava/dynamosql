@@ -26,7 +26,8 @@
         "DocumentPath": {
           "Fragment": [
             {
-              "Symbol": "UserId"
+              "Symbol": "UserId",
+              "Indexes": null
             }
           ]
         }
@@ -36,7 +37,8 @@
         "DocumentPath": {
           "Fragment": [
             {
-              "Symbol": "TopScore"
+              "Symbol": "TopScore",
+              "Indexes": null
             }
           ]
         }
@@ -46,7 +48,10 @@
         "DocumentPath": {
           "Fragment": [
             {
-              "Symbol": "Scores[3]"
+              "Symbol": "Scores",
+              "Indexes": [
+                3
+              ]
             }
           ]
         }
@@ -56,7 +61,11 @@
         "DocumentPath": {
           "Fragment": [
             {
-              "Symbol": "Scores[3][2]"
+              "Symbol": "Scores",
+              "Indexes": [
+                3,
+                2
+              ]
             }
           ]
         }
@@ -66,10 +75,12 @@
         "DocumentPath": {
           "Fragment": [
             {
-              "Symbol": "Studio"
+              "Symbol": "Studio",
+              "Indexes": null
             },
             {
-              "Symbol": "Name"
+              "Symbol": "Name",
+              "Indexes": null
             }
           ]
         }
@@ -79,13 +90,16 @@
         "DocumentPath": {
           "Fragment": [
             {
-              "Symbol": "Studio"
+              "Symbol": "Studio",
+              "Indexes": null
             },
             {
-              "Symbol": "Location"
+              "Symbol": "Location",
+              "Indexes": null
             },
             {
-              "Symbol": "Country"
+              "Symbol": "Country",
+              "Indexes": null
             }
           ]
         }
@@ -95,10 +109,14 @@
         "DocumentPath": {
           "Fragment": [
             {
-              "Symbol": "Studio"
+              "Symbol": "Studio",
+              "Indexes": null
             },
             {
-              "Symbol": "Employees[3]"
+              "Symbol": "Employees",
+              "Indexes": [
+                3
+              ]
             }
           ]
         }

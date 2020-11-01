@@ -9,7 +9,10 @@
           "DocumentPath": {
             "Fragment": [
               {
-                "Symbol": "Scores[3]"
+                "Symbol": "Scores",
+                "Indexes": [
+                  3
+                ]
               }
             ]
           }
@@ -19,7 +22,11 @@
           "DocumentPath": {
             "Fragment": [
               {
-                "Symbol": "Scores[3][2]"
+                "Symbol": "Scores",
+                "Indexes": [
+                  3,
+                  2
+                ]
               }
             ]
           }

@@ -53,6 +53,7 @@ func (c conn) QueryContext(ctx context.Context, query string, args []driver.Name
 	}
 	return &rows{
 		req:  q.Query,
+		cols: q.Columns,
 		resp: resp,
 	}, nil
 }

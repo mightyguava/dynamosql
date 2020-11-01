@@ -2,21 +2,19 @@ package driver
 
 import (
 	"database/sql/driver"
-	"errors"
 	"io"
-	"sort"
-	"strconv"
-	"sync"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+
+	"github.com/mightyguava/dynamosql/parser"
 )
 
 type rows struct {
 	req  *dynamodb.QueryInput
 	resp *dynamodb.QueryOutput
+	cols []*parser.ProjectionColumn
 
-	mu      sync.Mutex
-	cols    []string
 	nextRow int
 }
 
@@ -25,24 +23,19 @@ var _ driver.Rows = &rows{}
 // Returns the number of columns.
 // Caveat: the number of columns is always equal to the number of attributes in the first returned item.
 func (r *rows) Columns() []string {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	if r.cols != nil {
-		return r.cols
+	if len(r.cols) == 0 {
+		return []string{"document"}
 	}
 
-	if len(r.resp.Items) == 0 {
-		return []string{}
+	cols := make([]string, 0, len(r.cols))
+	for _, col := range r.cols {
+		if col.Function != nil {
+			cols = append(cols, "document")
+		} else {
+			cols = append(cols, col.String())
+		}
 	}
 
-	cols := make([]string, 0, len(r.resp.Items[0]))
-	for k := range r.resp.Items[0] {
-		cols = append(cols, k)
-	}
-	sort.Strings(cols)
-
-	r.cols = cols
 	return cols
 }
 
@@ -51,43 +44,99 @@ func (r *rows) Close() error {
 }
 
 func (r *rows) Next(dest []driver.Value) error {
-	cols := r.Columns()
 	if r.nextRow >= len(r.resp.Items) {
 		return io.EOF
 	}
 	row := r.resp.Items[r.nextRow]
 	r.nextRow++
-	for i, key := range cols {
-		v, err := convertValue(row[key])
-		if err != nil {
-			return err
+
+	// SELECT *
+	if len(r.cols) == 0 {
+		dest[0] = row
+	}
+
+	for i, col := range r.cols {
+		if col.Function != nil {
+			// SELECT document(...) returns the whole document
+			dest[i] = row
+		} else {
+			dest[i] = pluck(&dynamodb.AttributeValue{M: row}, col.DocumentPath)
 		}
-		dest[i] = v
 	}
 	return nil
 }
 
-func convertValue(av *dynamodb.AttributeValue) (interface{}, error) {
+func pluck(pos *dynamodb.AttributeValue, path *parser.DocumentPath) driver.Value {
+	var ok bool
+	for _, frag := range path.Fragment {
+		if pos.M == nil {
+			return nil
+		}
+		pos, ok = pos.M[frag.Symbol]
+		if !ok {
+			return nil
+		}
+		for _, idx := range frag.Indexes {
+			switch {
+			case pos.L != nil:
+				if idx >= len(pos.L) {
+					return nil
+				}
+				pos = pos.L[idx]
+			case pos.BS != nil:
+				if idx >= len(pos.BS) {
+					return nil
+				}
+				pos = &dynamodb.AttributeValue{B: pos.BS[idx]}
+			case pos.NS != nil:
+				if idx >= len(pos.NS) {
+					return nil
+				}
+				pos = &dynamodb.AttributeValue{N: pos.NS[idx]}
+			case pos.SS != nil:
+				if idx >= len(pos.SS) {
+					return nil
+				}
+				pos = &dynamodb.AttributeValue{S: pos.SS[idx]}
+			default:
+				return nil
+			}
+		}
+	}
+	return convertValue(pos)
+}
+
+func convertValue(av *dynamodb.AttributeValue) interface{} {
 	switch {
-	case av.B != nil:
-		return av.B, nil
+	// bool
 	case av.BOOL != nil:
-		return *av.BOOL, nil
-	case av.BS != nil:
-		return nil, errors.New("unsupported type Binary Set")
-	case av.L != nil:
-		return nil, errors.New("unsupported type List")
-	case av.M != nil:
-		return nil, errors.New("unsupported type Map")
+		return *av.BOOL
+	// number (returned as string since db/sql supports string conversion)
 	case av.N != nil:
-		return strconv.ParseFloat(*av.N, 64)
-	case av.NS != nil:
-		return nil, errors.New("unsupported type Number Set")
+		return *av.N
+	// string
 	case av.S != nil:
-		return *av.S, nil
+		return *av.S
+	// byte array
+	case av.B != nil:
+		return av.B
+	// list
+	case av.L != nil:
+		return av.L
+	// map
+	case av.M != nil:
+		return av.M
+	// set of numbers
+	case av.NS != nil:
+		return aws.StringValueSlice(av.NS)
+	// set of strings
 	case av.SS != nil:
-		return nil, errors.New("unsupported type String Set")
+		return aws.StringValueSlice(av.SS)
+	// set of byte arrays
+	case av.BS != nil:
+		return av.BS
+	// null
 	default:
-		return nil, nil
+		return nil
 	}
 }

@@ -9,10 +9,12 @@
           "DocumentPath": {
             "Fragment": [
               {
-                "Symbol": "Studio"
+                "Symbol": "Studio",
+                "Indexes": null
               },
               {
-                "Symbol": "Name"
+                "Symbol": "Name",
+                "Indexes": null
               }
             ]
           }
@@ -22,13 +24,16 @@
           "DocumentPath": {
             "Fragment": [
               {
-                "Symbol": "Studio"
+                "Symbol": "Studio",
+                "Indexes": null
               },
               {
-                "Symbol": "Name"
+                "Symbol": "Name",
+                "Indexes": null
               },
               {
-                "Symbol": "FirstName"
+                "Symbol": "FirstName",
+                "Indexes": null
               }
             ]
           }
@@ -38,10 +43,14 @@
           "DocumentPath": {
             "Fragment": [
               {
-                "Symbol": "Studio"
+                "Symbol": "Studio",
+                "Indexes": null
               },
               {
-                "Symbol": "Employees[3]"
+                "Symbol": "Employees",
+                "Indexes": [
+                  3
+                ]
               }
             ]
           }

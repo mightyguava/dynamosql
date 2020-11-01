@@ -46,7 +46,8 @@
                 "DocumentPath": {
                   "Fragment": [
                     {
-                      "Symbol": "actor"
+                      "Symbol": "actor",
+                      "Indexes": null
                     }
                   ]
                 },

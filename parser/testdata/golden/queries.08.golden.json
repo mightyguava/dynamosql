@@ -46,7 +46,8 @@
                 "DocumentPath": {
                   "Fragment": [
                     {
-                      "Symbol": "year"
+                      "Symbol": "year",
+                      "Indexes": null
                     }
                   ]
                 },

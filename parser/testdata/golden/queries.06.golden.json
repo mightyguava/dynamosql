@@ -9,7 +9,8 @@
           "DocumentPath": {
             "Fragment": [
               {
-                "Symbol": "title"
+                "Symbol": "title",
+                "Indexes": null
               }
             ]
           }
@@ -19,7 +20,8 @@
           "DocumentPath": {
             "Fragment": [
               {
-                "Symbol": "year"
+                "Symbol": "year",
+                "Indexes": null
               }
             ]
           }

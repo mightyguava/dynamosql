@@ -13,10 +13,9 @@ var (
 	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
 		`|(?P<Keyword>(?i)SELECT|FROM|WHERE|MINUS|EXCEPT|INTERSECT|ORDER|LIMIT|OFFSET|TRUE|FALSE|NULL|IS|NOT|ANY|SOME|BETWEEN|AND|OR|AS)` +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
-		`|(?P<IndexArray>(\[\d\])+)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Operators><>|!=|<=|>=|[-+*/%:,.()=<>])`,
+		`|(?P<Operators><>|!=|<=|>=|[-+*/%:,.()=<>\[\]])`,
 	))
 	Parser = participle.MustBuild(
 		&Select{},
@@ -166,15 +165,15 @@ type Operand struct {
 }
 
 type DocumentPath struct {
-	Fragment []PathFragment `@@ ( "." @@)*`
+	Fragment []PathFragment `@@ ( "." @@ )*`
 }
 
 func (p DocumentPath) String() string {
 	buf := &bytes.Buffer{}
-	buf.WriteString(p.Fragment[0].Symbol)
+	buf.WriteString(p.Fragment[0].String())
 	for _, f := range p.Fragment[1:] {
 		buf.WriteRune('.')
-		buf.WriteString(f.Symbol)
+		buf.WriteString(f.String())
 	}
 	return buf.String()
 }
@@ -184,7 +183,22 @@ type SymbolRef struct {
 }
 
 type PathFragment struct {
-	Symbol string `@Ident @IndexArray*`
+	Symbol  string `@Ident`
+	Indexes []int  `( "[" @Number "]" )*`
+}
+
+func (p PathFragment) String() string {
+	if len(p.Indexes) == 0 {
+		return p.Symbol
+	}
+	buf := &bytes.Buffer{}
+	buf.WriteString(p.Symbol)
+	for _, idx := range p.Indexes {
+		buf.WriteRune('[')
+		buf.WriteString(strconv.Itoa(idx))
+		buf.WriteRune(']')
+	}
+	return buf.String()
 }
 
 type Value struct {
