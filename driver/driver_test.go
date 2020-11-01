@@ -13,6 +13,7 @@ import (
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
 
+	"github.com/mightyguava/dynamosql"
 	"github.com/mightyguava/dynamosql/testing/fixtures"
 )
 
@@ -87,15 +88,31 @@ func TestDriverGolden(t *testing.T) {
 			require.NoError(t, err, query)
 			results = append(results, strings.Join(cols, ","))
 
-			row := make([]string, len(cols))
-			scanRow := make([]interface{}, len(cols))
-			for i := range row {
-				scanRow[i] = &row[i]
-			}
-			for rows.Next() {
-				err = rows.Scan(scanRow...)
-				require.NoError(t, err, query)
-				results = append(results, strings.Join(row, ","))
+			if cols[0] == "document" {
+				var doc interface{}
+				if strings.Contains(query, "FROM movies") {
+					doc = &fixtures.Movie{}
+				} else if strings.Contains(query, "FROM gamescores") {
+					doc = &fixtures.GameScore{}
+				} else {
+					panic("unexpected code path")
+				}
+				for rows.Next() {
+					err = rows.Scan(dynamosql.Document(doc))
+					require.NoError(t, err, query)
+					results = append(results, repr.String(doc))
+				}
+			} else {
+				row := make([]string, len(cols))
+				scanRow := make([]interface{}, len(cols))
+				for i := range row {
+					scanRow[i] = &row[i]
+				}
+				for rows.Next() {
+					err = rows.Scan(scanRow...)
+					require.NoError(t, err, query)
+					results = append(results, strings.Join(row, ","))
+				}
 			}
 			require.NoError(t, rows.Err())
 

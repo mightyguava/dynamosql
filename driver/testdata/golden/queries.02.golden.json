@@ -1,7 +1,7 @@
 {
   "Query": "SELECT * FROM gamescores WHERE UserId = \"103\" AND GameTitle BETWEEN \"Galaxy\" AND \"Meteor\" AND TopScore > 1000",
   "Results": [
-    "GameTitle,Losses,TopScore,UserId,Wins",
-    "Galaxy Invaders,3,2317,103,40"
+    "document",
+    "&fixtures.GameScore{UserID: \"103\", GameTitle: \"Galaxy Invaders\", TopScore: 2317, Wins: 40, Losses: 3}"
   ]
 }
