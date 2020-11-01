@@ -11,13 +11,11 @@ import (
 var (
 	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
 		`|(?P<Keyword>(?i)SELECT|FROM|WHERE|MINUS|EXCEPT|INTERSECT|ORDER|LIMIT|OFFSET|TRUE|FALSE|NULL|IS|NOT|ANY|SOME|BETWEEN|AND|OR|AS)` +
-		`|(?P<Function>(?i)attribute_exists|attribute_not_exists|attribute_type|begins_with|contains|size)` +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<IndexArray>(\[\d\])+)` +
-		`|(?P<NamedParameter>:[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Operators><>|!=|<=|>=|[-+*/%,.()=<>])`,
+		`|(?P<Operators><>|!=|<=|>=|[-+*/%:,.()=<>])`,
 	))
 	Parser = participle.MustBuild(
 		&Select{},
@@ -84,7 +82,7 @@ type NotCondition struct {
 }
 
 type FunctionExpression struct {
-	Function      string   `@Function`
+	Function      string   `@Ident`
 	PathArgument  string   `"(" @Ident`
 	MoreArguments []*Value `    ( "," @@ )* ")"`
 }
@@ -142,7 +140,7 @@ type PathFragment struct {
 }
 
 type Value struct {
-	PlaceHolder *string  `  @NamedParameter`
+	PlaceHolder *string  `  @":" @Ident`
 	Number      *float64 `| @Number`
 	String      *string  `| @String`
 	Boolean     *Boolean `| @("TRUE" | "FALSE")`
