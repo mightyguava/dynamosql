@@ -3,20 +3,26 @@
   "AST": {
     "Projection": {
       "All": false,
-      "Projections": [
+      "Columns": [
         {
-          "Fragment": [
-            {
-              "Symbol": "title"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "title"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "year"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "year"
+              }
+            ]
+          },
+          "Function": null
         }
       ]
     },

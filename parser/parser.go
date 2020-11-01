@@ -3,6 +3,7 @@ package parser
 
 import (
 	"bytes"
+	"strconv"
 
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
@@ -41,8 +42,8 @@ type Select struct {
 }
 
 type ProjectionExpression struct {
-	All         bool           `  @"*"`
-	Projections []DocumentPath `| @@ ( "," @@ )*`
+	All     bool               `  @"*"`
+	Columns []ProjectionColumn `| @@ ( "," @@ )*`
 }
 
 func (e ProjectionExpression) String() string {
@@ -50,12 +51,27 @@ func (e ProjectionExpression) String() string {
 		return ""
 	}
 	buf := &bytes.Buffer{}
-	buf.WriteString(e.Projections[0].String())
-	for _, p := range e.Projections[1:] {
+	buf.WriteString(e.Columns[0].String())
+	for _, p := range e.Columns[1:] {
 		buf.WriteString(", ")
 		buf.WriteString(p.String())
 	}
 	return buf.String()
+}
+
+type ProjectionColumn struct {
+	DocumentPath *DocumentPath       `  @@`
+	Function     *FunctionExpression `| @@`
+}
+
+func (c ProjectionColumn) String() string {
+	if c.DocumentPath != nil {
+		return c.DocumentPath.String()
+	}
+	if c.Function != nil {
+		return c.Function.String()
+	}
+	return ""
 }
 
 type ConditionExpression struct {
@@ -85,6 +101,18 @@ type FunctionExpression struct {
 	Function      string   `@Ident`
 	PathArgument  string   `"(" @Ident`
 	MoreArguments []*Value `    ( "," @@ )* ")"`
+}
+
+func (e FunctionExpression) String() string {
+	buf := &bytes.Buffer{}
+	buf.WriteString(e.Function)
+	buf.WriteRune('(')
+	buf.WriteString(e.PathArgument)
+	for _, arg := range e.MoreArguments {
+		buf.WriteString(arg.Literal())
+	}
+	buf.WriteRune(')')
+	return buf.String()
 }
 
 type ConditionOperand struct {
@@ -145,4 +173,21 @@ type Value struct {
 	String      *string  `| @String`
 	Boolean     *Boolean `| @("TRUE" | "FALSE")`
 	Null        bool     `| @"NULL"`
+}
+
+func (v Value) Literal() string {
+	switch {
+	case v.PlaceHolder != nil:
+		return *v.PlaceHolder
+	case v.Number != nil:
+		return strconv.FormatFloat(*v.Number, 'g', -1, 64)
+	case v.String != nil:
+		return *v.String
+	case v.Boolean != nil:
+		return strconv.FormatBool(bool(*v.Boolean))
+	case v.Null:
+		return "NULL"
+	default:
+		panic("unexpected code path")
+	}
 }

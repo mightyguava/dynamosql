@@ -3,7 +3,7 @@
   "AST": {
     "Projection": {
       "All": true,
-      "Projections": null
+      "Columns": null
     },
     "From": "movies",
     "Where": null,

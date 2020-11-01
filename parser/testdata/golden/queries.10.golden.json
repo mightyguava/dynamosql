@@ -3,20 +3,26 @@
   "AST": {
     "Projection": {
       "All": false,
-      "Projections": [
+      "Columns": [
         {
-          "Fragment": [
-            {
-              "Symbol": "UserId"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "UserId"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "TopScore"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "TopScore"
+              }
+            ]
+          },
+          "Function": null
         }
       ]
     },

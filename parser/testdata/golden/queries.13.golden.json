@@ -3,67 +3,88 @@
   "AST": {
     "Projection": {
       "All": false,
-      "Projections": [
+      "Columns": [
         {
-          "Fragment": [
-            {
-              "Symbol": "UserId"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "UserId"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "TopScore"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "TopScore"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "Scores[3]"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "Scores[3]"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "Scores[3][2]"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "Scores[3][2]"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "Studio"
-            },
-            {
-              "Symbol": "Name"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "Studio"
+              },
+              {
+                "Symbol": "Name"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "Studio"
-            },
-            {
-              "Symbol": "Location"
-            },
-            {
-              "Symbol": "Country"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "Studio"
+              },
+              {
+                "Symbol": "Location"
+              },
+              {
+                "Symbol": "Country"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "Studio"
-            },
-            {
-              "Symbol": "Employees[3]"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "Studio"
+              },
+              {
+                "Symbol": "Employees[3]"
+              }
+            ]
+          },
+          "Function": null
         }
       ]
     },

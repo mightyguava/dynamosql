@@ -3,39 +3,48 @@
   "AST": {
     "Projection": {
       "All": false,
-      "Projections": [
+      "Columns": [
         {
-          "Fragment": [
-            {
-              "Symbol": "Studio"
-            },
-            {
-              "Symbol": "Name"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "Studio"
+              },
+              {
+                "Symbol": "Name"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "Studio"
-            },
-            {
-              "Symbol": "Name"
-            },
-            {
-              "Symbol": "FirstName"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "Studio"
+              },
+              {
+                "Symbol": "Name"
+              },
+              {
+                "Symbol": "FirstName"
+              }
+            ]
+          },
+          "Function": null
         },
         {
-          "Fragment": [
-            {
-              "Symbol": "Studio"
-            },
-            {
-              "Symbol": "Employees[3]"
-            }
-          ]
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "Studio"
+              },
+              {
+                "Symbol": "Employees[3]"
+              }
+            ]
+          },
+          "Function": null
         }
       ]
     },
