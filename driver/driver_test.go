@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -50,7 +51,7 @@ func TestDriverBind(t *testing.T) {
 }
 
 func TestDriverGolden(t *testing.T) {
-	sess := fixtures.SetUp(t, fixtures.GameScores)
+	sess := fixtures.SetUp(t, fixtures.GameScores, fixtures.Movies)
 
 	driver, err := New(Config{Session: sess}).OpenConnector("")
 	require.NoError(t, err)
@@ -58,9 +59,9 @@ func TestDriverGolden(t *testing.T) {
 	err = db.Ping()
 	require.NoError(t, err)
 
-	type item struct {
+	type output struct {
 		Query   string
-		Results []string
+		Results []interface{}
 	}
 
 	queries, err := os.Open("testdata/queries.sql")
@@ -73,11 +74,15 @@ func TestDriverGolden(t *testing.T) {
 	i := 0
 	for scanner.Scan() {
 		query := scanner.Text()
-		t.Run(query, func(t *testing.T) {
+		if strings.HasPrefix(query, "--") {
+			// skip comments
+			continue
+		}
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			rows, err := db.Query(query)
 			require.NoError(t, err, query)
 
-			var results []string
+			var results []interface{}
 			cols, err := rows.Columns()
 			require.NoError(t, err, query)
 			results = append(results, strings.Join(cols, ","))
@@ -92,8 +97,9 @@ func TestDriverGolden(t *testing.T) {
 				require.NoError(t, err, query)
 				results = append(results, strings.Join(row, ","))
 			}
+			require.NoError(t, rows.Err())
 
-			result := item{
+			result := output{
 				Query:   query,
 				Results: results,
 			}

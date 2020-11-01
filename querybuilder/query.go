@@ -23,6 +23,7 @@ var (
 
 type PreparedQuery struct {
 	Query       *dynamodb.QueryInput
+	Columns     []parser.DocumentPath
 	FreeParams  FreeParams
 	FixedParams map[string]interface{}
 }
@@ -143,6 +144,7 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	}
 	return &PreparedQuery{
 		Query:       req,
+		Columns:     ast.Projection.Projections,
 		FreeParams:  visit.Context.FreeParams,
 		FixedParams: visit.Context.FixedParams,
 	}, nil
