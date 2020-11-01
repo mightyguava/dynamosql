@@ -15,7 +15,8 @@ var (
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Operators><>|!=|<=|>=|[-+*/%:,.()=<>\[\]])`,
+		`|(?P<Operators><>|!=|<=|>=|[-+*/%:,.()=<>\[\]])` +
+		"|`",
 	))
 	Parser = participle.MustBuild(
 		&Select{},
@@ -183,7 +184,7 @@ type SymbolRef struct {
 }
 
 type PathFragment struct {
-	Symbol  string `@Ident`
+	Symbol  string "(@Ident | \"`\" ( @Ident | @Keyword ) \"`\")"
 	Indexes []int  `( "[" @Number "]" )*`
 }
 

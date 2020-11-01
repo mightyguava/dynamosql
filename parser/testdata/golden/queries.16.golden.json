@@ -1,0 +1,58 @@
+{
+  "Query": "SELECT `SELECT`.`foo` FROM gamescores WHERE UserId = :UserId",
+  "AST": {
+    "Projection": {
+      "All": false,
+      "Columns": [
+        {
+          "Function": null,
+          "DocumentPath": {
+            "Fragment": [
+              {
+                "Symbol": "SELECT",
+                "Indexes": null
+              },
+              {
+                "Symbol": "foo",
+                "Indexes": null
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "From": "gamescores",
+    "Where": {
+      "And": [
+        {
+          "Parenthesized": null,
+          "Not": null,
+          "Operand": {
+            "Operand": {
+              "Symbol": "UserId"
+            },
+            "ConditionRHS": {
+              "Compare": {
+                "Operator": "=",
+                "Operand": {
+                  "Value": {
+                    "PlaceHolder": ":UserId",
+                    "Number": null,
+                    "String": null,
+                    "Boolean": null,
+                    "Null": false
+                  },
+                  "SymbolRef": null
+                }
+              },
+              "Between": null,
+              "In": null
+            }
+          },
+          "Function": null
+        }
+      ]
+    },
+    "Limit": null
+  }
+}

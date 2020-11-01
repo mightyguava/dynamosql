@@ -21,3 +21,5 @@ SELECT UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.C
 SELECT document(UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.Country, Studio.Employees[3]) FROM gamescores WHERE UserId = :UserId
 -- Project fields and document
 SELECT UserId, document(TopScore) FROM gamescores WHERE UserId = :UserId
+-- Quoted keywords
+SELECT `SELECT`.`foo` FROM gamescores WHERE UserId = :UserId
