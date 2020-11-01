@@ -38,7 +38,7 @@ func TestBuildQuery(t *testing.T) {
 			continue
 		}
 		err := parser.Parser.ParseString(queryStr, &ast)
-		require.NoError(t, err, "Parse: %s: %s", queryStr, repr.String(ast))
+		require.NoError(t, err, "Parse: %s:\n%s", queryStr, repr.String(ast, repr.Indent("  ")))
 		query, err := buildQuery(table, ast)
 		require.NoError(t, err)
 		parsed = append(parsed, item{

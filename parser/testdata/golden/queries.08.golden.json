@@ -41,8 +41,18 @@
           "Operand": null,
           "Function": {
             "Function": "attribute_exists",
-            "PathArgument": "year",
-            "MoreArguments": null
+            "Args": [
+              {
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "year"
+                    }
+                  ]
+                },
+                "Value": null
+              }
+            ]
           }
         }
       ]

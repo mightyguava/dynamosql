@@ -187,7 +187,7 @@ func extractKeyExpressions(expr *parser.AndExpression, isKey func(string) bool) 
 	}
 	for _, term := range expr.And {
 		if term.Operand != nil && isKey(term.Operand.Operand.Symbol) ||
-			term.Function != nil && isKey(term.Function.PathArgument) {
+			term.Function != nil && term.Function.FirstArgIsRef() && isKey(term.Function.Args[0].DocumentPath.String()) {
 			v.Key.And = append(v.Key.And, term)
 		} else {
 			v.Filter.And = append(v.Filter.And, term)
@@ -202,13 +202,17 @@ func (hashKey errHashKey) Error() string {
 	return fmt.Sprintf("partition key must appear exactly once in the WHERE clause, in an equality condition, such as: WHERE %s = :param", string(hashKey))
 }
 
+//func buildProjectionExpression(expr *parser.ProjectionExpression) (string, error) {
+//
+//}
+
 func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error) {
 	var hashExpr, sortExpr string
 	visitor := &visitor{Context: ctx}
 	for _, subExpr := range key.And {
 		var expr, key string
 		if subExpr.Function != nil {
-			key = subExpr.Function.PathArgument
+			key = subExpr.Function.Args[0].DocumentPath.String()
 			if ctx.Table.HashKey == key {
 				return "", errHashKey(ctx.Table.HashKey)
 			} else if subExpr.Function.Function != "begins_with" {
@@ -299,8 +303,8 @@ func (v *visitor) VisitFilterExpression(n interface{}) (string, error) {
 			}
 			return v.VisitSimpleExpression(node.Operand), nil
 		case node.Function != nil:
-			if v.Context.Table.IsKey(node.Function.PathArgument) {
-				return "", fmt.Errorf("partition key %q may not appear in nested expression", node.Function.PathArgument)
+			if node.Function.FirstArgIsRef() && v.Context.Table.IsKey(node.Function.Args[0].DocumentPath.String()) {
+				return "", fmt.Errorf("partition key %q may not appear in nested expression", node.Function.Args[0].DocumentPath)
 			}
 			return v.VisitSimpleExpression(node.Function), nil
 		case node.Not != nil:
@@ -333,12 +337,16 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 	case *parser.ConditionOperand:
 		return node.Operand.Symbol + " " + v.VisitSimpleExpression(node.ConditionRHS)
 	case *parser.FunctionExpression:
-		args := node.PathArgument
-		more := v.VisitSimpleExpression(node.MoreArguments)
-		if more != "" {
-			args = args + "," + more
+		argStr := make([]string, len(node.Args))
+		for i, arg := range node.Args {
+			argStr[i] = v.VisitSimpleExpression(arg)
 		}
-		return fmt.Sprintf("%s(%s)", node.Function, args)
+		return fmt.Sprintf("%s(%s)", node.Function, strings.Join(argStr, ", "))
+	case *parser.FunctionArgument:
+		if node.DocumentPath != nil {
+			return node.DocumentPath.String()
+		}
+		return v.VisitSimpleExpression(node.Value)
 	case *parser.ConditionRHS:
 		switch {
 		case node.Compare != nil:
@@ -357,12 +365,6 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 			v.VisitSimpleExpression(node.Start), v.VisitSimpleExpression(node.End))
 	case *parser.In:
 		return fmt.Sprintf(" IN (%s)", v.VisitSimpleExpression(node.Values))
-	case []*parser.Value:
-		var values []string
-		for _, value := range node {
-			values = append(values, v.VisitSimpleExpression(value))
-		}
-		return strings.Join(values, ",")
 	case *parser.Operand:
 		if node.SymbolRef != nil {
 			return node.SymbolRef.Symbol
@@ -393,6 +395,6 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 			panic("invalid value" + repr.String(node))
 		}
 	default:
-		panic("invalid term: " + repr.String(node))
+		panic("visitor does not recognize type " + reflect.TypeOf(node).String())
 	}
 }

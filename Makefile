@@ -12,5 +12,8 @@ dynamodb:
 test:
 	go test -p 1 ./...
 
+update-golden:
+	go test -p 1 ./... -- -clean -update
+
 lint:
 	golangci-lint run --config .golangci.yml

@@ -98,21 +98,41 @@ type NotCondition struct {
 }
 
 type FunctionExpression struct {
-	Function      string   `@Ident`
-	PathArgument  string   `"(" @Ident`
-	MoreArguments []*Value `    ( "," @@ )* ")"`
+	Function string              `@Ident`
+	Args     []*FunctionArgument `"(" @@ ( "," @@ )* ")"`
 }
 
-func (e FunctionExpression) String() string {
+func (f *FunctionExpression) FirstArgIsRef() bool {
+	return len(f.Args) > 0 && f.Args[0].DocumentPath != nil
+}
+
+func (f *FunctionExpression) String() string {
 	buf := &bytes.Buffer{}
-	buf.WriteString(e.Function)
+	buf.WriteString(f.Function)
 	buf.WriteRune('(')
-	buf.WriteString(e.PathArgument)
-	for _, arg := range e.MoreArguments {
-		buf.WriteString(arg.Literal())
+	for i, arg := range f.Args {
+		if i != 0 {
+			buf.WriteString(", ")
+		}
+		buf.WriteString(arg.String())
 	}
 	buf.WriteRune(')')
 	return buf.String()
+}
+
+type FunctionArgument struct {
+	DocumentPath *DocumentPath `  @@`
+	Value        *Value        `| @@`
+}
+
+func (a FunctionArgument) String() string {
+	if a.DocumentPath != nil {
+		return a.DocumentPath.String()
+	}
+	if a.Value != nil {
+		return a.Value.Literal()
+	}
+	return ""
 }
 
 type ConditionOperand struct {

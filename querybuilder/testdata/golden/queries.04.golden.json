@@ -10,7 +10,7 @@
       "ExpressionAttributeValues": null,
       "FilterExpression": null,
       "IndexName": null,
-      "KeyConditionExpression": "UserId = :_gen1 AND begins_with(GameTitle,:_gen2)",
+      "KeyConditionExpression": "UserId = :_gen1 AND begins_with(GameTitle, :_gen2)",
       "KeyConditions": null,
       "Limit": null,
       "ProjectionExpression": null,

@@ -41,14 +41,26 @@
           "Operand": null,
           "Function": {
             "Function": "begins_with",
-            "PathArgument": "actor",
-            "MoreArguments": [
+            "Args": [
               {
-                "PlaceHolder": null,
-                "Number": null,
-                "String": "Will",
-                "Boolean": null,
-                "Null": false
+                "DocumentPath": {
+                  "Fragment": [
+                    {
+                      "Symbol": "actor"
+                    }
+                  ]
+                },
+                "Value": null
+              },
+              {
+                "DocumentPath": null,
+                "Value": {
+                  "PlaceHolder": null,
+                  "Number": null,
+                  "String": "Will",
+                  "Boolean": null,
+                  "Null": false
+                }
               }
             ]
           }
