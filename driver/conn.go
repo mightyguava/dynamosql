@@ -54,20 +54,24 @@ func (c conn) QueryContext(ctx context.Context, query string, args []driver.Name
 	}
 	return &rows{
 		nextPage: func(lastEvaluatedKey map[string]*dynamodb.AttributeValue) (*dynamodb.QueryOutput, error) {
-			if lastEvaluatedKey == nil {
-				// No more pages
-				return nil, io.EOF
+			for lastEvaluatedKey != nil {
+				req.ExclusiveStartKey = lastEvaluatedKey
+				// nolint: govet
+				resp, err := c.dynamo.QueryWithContext(ctx, req)
+				if err != nil {
+					return nil, err
+				}
+				if len(resp.Items) > 0 {
+					return resp, nil
+				}
+				// An empty response does not necessarily indicate there are no more results. It's possible the
+				// filter expression filtered out all values in this range. Need to keep paging until LastEvaluatedKey
+				// is nil.
+				if resp.LastEvaluatedKey != nil {
+					lastEvaluatedKey = resp.LastEvaluatedKey
+				}
 			}
-			// nolint: govet
-			resp, err := c.dynamo.QueryWithContext(ctx, req)
-			if err != nil {
-				return nil, err
-			}
-			if len(resp.Items) == 0 {
-				// In case the last items were deleted after the last query.
-				return nil, io.EOF
-			}
-			return resp, nil
+			return nil, io.EOF
 		},
 		cols: q.Columns,
 		resp: resp,
