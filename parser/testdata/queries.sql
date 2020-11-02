@@ -25,3 +25,5 @@ SELECT UserId, document(TopScore) FROM gamescores WHERE UserId = :UserId
 SELECT `SELECT`.`foo` FROM gamescores WHERE UserId = :UserId
 -- document(*) is treated the same as *
 SELECT document(*) FROM gamescores WHERE UserId = :UserId
+-- Use an index
+SELECT * FROM movies USE INDEX (some_index) WHERE UserId = :UserId

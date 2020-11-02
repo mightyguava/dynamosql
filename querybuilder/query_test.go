@@ -109,7 +109,7 @@ func TestInvalidQueries(t *testing.T) {
 }
 
 func TestSubstitute(t *testing.T) {
-	ctx := NewContext(nil)
+	ctx := NewContext(&schema.Table{}, "")
 	require.Equal(t, "hello", ctx.substitute("hello"))
 	require.Equal(t, "#select", ctx.substitute("select"))
 	require.Equal(t, "#select", ctx.substitute("select"))

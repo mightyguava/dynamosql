@@ -107,6 +107,7 @@
       ]
     },
     "From": "gamescores",
+    "Index": null,
     "Where": {
       "And": [
         {

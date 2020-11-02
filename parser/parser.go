@@ -11,7 +11,7 @@ import (
 
 var (
 	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
-		`|(?P<Keyword>(?i)SELECT|FROM|WHERE|MINUS|EXCEPT|INTERSECT|ORDER|LIMIT|OFFSET|TRUE|FALSE|NULL|IS|NOT|ANY|SOME|BETWEEN|AND|OR|AS)` +
+		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX)\b` +
 		"|(?P<QuotedIdent>`[^`]+`)" +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
@@ -46,7 +46,8 @@ func (b *Boolean) Capture(values []string) error {
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
 	Projection *ProjectionExpression `"SELECT" @@`
-	From       string                `"FROM" @Ident ( @"." @Ident )*`
+	From       string                `"FROM" @Ident`
+	Index      *string               `( "USE" "INDEX" "(" @Ident ")" )?`
 	Where      *AndExpression        `( "WHERE" @@ )?`
 	Limit      *int                  `( "LIMIT" @Number )?`
 }

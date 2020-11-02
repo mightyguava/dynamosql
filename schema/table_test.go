@@ -34,17 +34,17 @@ func TestNewTable(t *testing.T) {
 		expectedTable := &Table{
 			HashKey: "UserId",
 			SortKey: "GameTitle",
-			LocalSecondaryIndexes: []LocalSecondaryIndex{
+			Indexes: []Index{
 				{
 					Name:    "UserWinsIndex",
+					HashKey: "UserId",
 					SortKey: "Wins",
 				},
-			},
-			GlobalSecondaryIndexes: []GlobalSecondaryIndex{
 				{
 					Name:    "GameTitleIndex",
 					HashKey: "GameTitle",
 					SortKey: "TopScore",
+					Global:  true,
 				},
 			},
 		}

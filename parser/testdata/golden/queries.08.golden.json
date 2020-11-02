@@ -6,6 +6,7 @@
       "Columns": null
     },
     "From": "movies",
+    "Index": null,
     "Where": {
       "And": [
         {

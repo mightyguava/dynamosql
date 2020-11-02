@@ -11,3 +11,5 @@ SELECT document(UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.L
 SELECT title, year FROM movies WHERE title = :title AND year > 2009 AND escaped = TRUE
 -- Fields that have dots in them. {"foo.bar": "a"} and {"foo": {"bar": "b"}} are different.
 SELECT `foo.bar`, `foo`.`bar` FROM movies WHERE title = :title
+-- Global Secondary Index with different hash key
+SELECT * FROM gamescores USE INDEX (GameTitleIndex) WHERE GameTitle = :title AND UserId > "45"

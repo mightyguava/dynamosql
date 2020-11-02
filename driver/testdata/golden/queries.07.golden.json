@@ -1,0 +1,8 @@
+{
+  "Query": "SELECT * FROM gamescores USE INDEX (GameTitleIndex) WHERE GameTitle = \"Galaxy Invaders\" AND UserId > \"101\"",
+  "Results": [
+    "document",
+    "&fixtures.GameScore{UserID: \"102\", GameTitle: \"Galaxy Invaders\", }",
+    "&fixtures.GameScore{UserID: \"103\", GameTitle: \"Galaxy Invaders\", TopScore: 2317, }"
+  ]
+}

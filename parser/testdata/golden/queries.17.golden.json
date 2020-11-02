@@ -6,6 +6,7 @@
       "Columns": null
     },
     "From": "gamescores",
+    "Index": null,
     "Where": {
       "And": [
         {

@@ -7,3 +7,5 @@ SELECT title, year FROM movies WHERE title = "World War Z"
 SELECT title, info.rating FROM movies WHERE title = "World War Z"
 -- `info.rating` selects the field "info.rating" which does not exist
 SELECT title, `info.rating` FROM movies WHERE title = "World War Z"
+-- Global Secondary Index with different hash key
+SELECT * FROM gamescores USE INDEX (GameTitleIndex) WHERE GameTitle = "Galaxy Invaders" AND UserId > "101"

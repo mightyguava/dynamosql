@@ -1,35 +1,12 @@
 {
-  "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\"",
+  "Query": "SELECT * FROM movies USE INDEX (some_index) WHERE UserId = :UserId",
   "AST": {
     "Projection": {
-      "All": false,
-      "Columns": [
-        {
-          "Function": null,
-          "DocumentPath": {
-            "Fragment": [
-              {
-                "Symbol": "title",
-                "Indexes": null
-              }
-            ]
-          }
-        },
-        {
-          "Function": null,
-          "DocumentPath": {
-            "Fragment": [
-              {
-                "Symbol": "year",
-                "Indexes": null
-              }
-            ]
-          }
-        }
-      ]
+      "All": true,
+      "Columns": null
     },
     "From": "movies",
-    "Index": null,
+    "Index": "some_index",
     "Where": {
       "And": [
         {
@@ -39,7 +16,7 @@
             "Operand": {
               "Fragment": [
                 {
-                  "Symbol": "title",
+                  "Symbol": "UserId",
                   "Indexes": null
                 }
               ]
@@ -49,9 +26,9 @@
                 "Operator": "=",
                 "Operand": {
                   "Value": {
-                    "PlaceHolder": null,
+                    "PlaceHolder": ":UserId",
                     "Number": null,
-                    "String": "The Dark Knight",
+                    "String": null,
                     "Boolean": null,
                     "Null": false
                   },

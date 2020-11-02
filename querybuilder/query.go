@@ -122,9 +122,16 @@ func (p FreeParams) Clone() FreeParams {
 }
 
 func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
-	ctx := NewContext(table)
+	index := ""
+	if ast.Index != nil {
+		index = *ast.Index
+		if !table.HasIndex(index) {
+			return nil, fmt.Errorf("unrecognized index %q fro table %q", *ast.Index, ast.From)
+		}
+	}
+	ctx := NewContext(table, index)
 	visit := &visitor{Context: ctx}
-	kf := extractKeyExpressions(ast.Where, table.IsKey)
+	kf := extractKeyExpressions(ast.Where, ctx.IsKey)
 	keyExpr, err := buildKeyExpression(ctx, kf.Key)
 	if err != nil {
 		return nil, err
@@ -152,6 +159,9 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	if len(ctx.Substitutions) > 0 {
 		req.ExpressionAttributeNames = aws.StringMap(ctx.Substitutions)
 	}
+	if index != "" {
+		req.IndexName = aws.String(index)
+	}
 	return &PreparedQuery{
 		Query:       req,
 		Columns:     ast.Projection.Columns,
@@ -162,7 +172,8 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 
 // Context tracks expression state as DynamoDB request is built.
 type Context struct {
-	Table         *schema.Table
+	HashKey       string
+	SortKey       string
 	FreeParams    map[string]Empty
 	FixedParams   map[string]interface{}
 	Substitutions map[string]string
@@ -171,13 +182,26 @@ type Context struct {
 	genSubCount   int
 }
 
-func NewContext(table *schema.Table) *Context {
+func NewContext(table *schema.Table, index string) *Context {
+	var hashKey, sortKey string
+	if index == "" {
+		hashKey, sortKey = table.HashKey, table.SortKey
+	} else {
+		idx := table.GetIndex(index)
+		hashKey, sortKey = idx.HashKey, idx.SortKey
+	}
 	return &Context{
-		Table:         table,
+		HashKey:       hashKey,
+		SortKey:       sortKey,
 		FreeParams:    make(map[string]Empty),
 		FixedParams:   make(map[string]interface{}),
 		Substitutions: make(map[string]string),
 	}
+}
+
+// IsKey returns true if the field is a hash key or sort key for the selected table/index.
+func (c *Context) IsKey(field string) bool {
+	return c.HashKey == field || c.SortKey == field
 }
 
 // NextGeneratedParam returns the next generated parameter placeholder name.
@@ -258,27 +282,27 @@ func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error)
 		var expr, key string
 		if subExpr.Function != nil {
 			key = subExpr.Function.Args[0].DocumentPath.String()
-			if ctx.Table.HashKey == key {
-				return "", errHashKey(ctx.Table.HashKey)
+			if ctx.HashKey == key {
+				return "", errHashKey(ctx.HashKey)
 			} else if subExpr.Function.Function != "begins_with" {
 				return "", fmt.Errorf("sort key %q may not be used with function %s()", key, subExpr.Function.Function)
 			}
 			expr = visitor.VisitSimpleExpression(subExpr.Function)
 		} else {
 			key = subExpr.Operand.Operand.String()
-			if key == ctx.Table.HashKey {
+			if key == ctx.HashKey {
 				if subExpr.Operand.ConditionRHS.Compare == nil || subExpr.Operand.ConditionRHS.Compare.Operator != "=" {
-					return "", errHashKey(ctx.Table.HashKey)
+					return "", errHashKey(ctx.HashKey)
 				}
 			}
 			expr = visitor.VisitSimpleExpression(subExpr.Operand)
 		}
-		if ctx.Table.HashKey == key {
+		if ctx.HashKey == key {
 			if hashExpr != "" {
 				return "", fmt.Errorf("partition key %q can only appear once in WHERE clause", key)
 			}
 			hashExpr = expr
-		} else if ctx.Table.SortKey == key {
+		} else if ctx.SortKey == key {
 			if sortExpr != "" {
 				return "", fmt.Errorf("sort key %q can only appear once in WHERE clause", key)
 			}
@@ -286,7 +310,7 @@ func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error)
 		}
 	}
 	if hashExpr == "" {
-		return "", errHashKey(ctx.Table.HashKey)
+		return "", errHashKey(ctx.HashKey)
 	}
 	if sortExpr != "" {
 		return hashExpr + " AND " + sortExpr, nil
@@ -343,12 +367,12 @@ func (v *visitor) VisitFilterExpression(n interface{}) (string, error) {
 	case *parser.Condition:
 		switch {
 		case node.Operand != nil:
-			if v.Context.Table.IsKey(node.Operand.Operand.String()) {
+			if v.Context.IsKey(node.Operand.Operand.String()) {
 				return "", fmt.Errorf("partition key %q may not appear in nested expression", node.Operand.Operand.String())
 			}
 			return v.VisitSimpleExpression(node.Operand), nil
 		case node.Function != nil:
-			if node.Function.FirstArgIsRef() && v.Context.Table.IsKey(node.Function.Args[0].DocumentPath.String()) {
+			if node.Function.FirstArgIsRef() && v.Context.IsKey(node.Function.Args[0].DocumentPath.String()) {
 				return "", fmt.Errorf("partition key %q may not appear in nested expression", node.Function.Args[0].DocumentPath)
 			}
 			return v.VisitSimpleExpression(node.Function), nil

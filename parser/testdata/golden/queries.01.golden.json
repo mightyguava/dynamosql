@@ -29,6 +29,7 @@
       ]
     },
     "From": "movies",
+    "Index": null,
     "Where": null,
     "Limit": null
   }

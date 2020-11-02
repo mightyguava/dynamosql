@@ -1,0 +1,31 @@
+{
+  "Query": "SELECT * FROM gamescores USE INDEX (GameTitleIndex) WHERE GameTitle = :title AND UserId > \"45\"",
+  "Prepared": {
+    "Query": {
+      "AttributesToGet": null,
+      "ConditionalOperator": null,
+      "ConsistentRead": null,
+      "ExclusiveStartKey": null,
+      "ExpressionAttributeNames": null,
+      "ExpressionAttributeValues": null,
+      "FilterExpression": "UserId > :_gen1",
+      "IndexName": "GameTitleIndex",
+      "KeyConditionExpression": "GameTitle = :title",
+      "KeyConditions": null,
+      "Limit": null,
+      "ProjectionExpression": null,
+      "QueryFilter": null,
+      "ReturnConsumedCapacity": null,
+      "ScanIndexForward": null,
+      "Select": null,
+      "TableName": "gamescores"
+    },
+    "Columns": null,
+    "FreeParams": {
+      ":title": {}
+    },
+    "FixedParams": {
+      ":_gen1": "45"
+    }
+  }
+}
