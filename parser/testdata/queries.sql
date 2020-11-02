@@ -27,3 +27,7 @@ SELECT `SELECT`.`foo` FROM gamescores WHERE UserId = :UserId
 SELECT document(*) FROM gamescores WHERE UserId = :UserId
 -- Use an index
 SELECT * FROM movies USE INDEX (some_index) WHERE UserId = :UserId
+-- Boolean parsing
+SELECT * FROM movies WHERE UserId = True
+-- DESC parsing
+SELECT * FROM movies WHERE UserId = :UserId DESC

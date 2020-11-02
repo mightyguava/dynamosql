@@ -4,6 +4,7 @@ package parser
 import (
 	"bytes"
 	"strconv"
+	"strings"
 
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
@@ -11,7 +12,7 @@ import (
 
 var (
 	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
-		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX)\b` +
+		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX|ASC|DESC)\b` +
 		"|(?P<QuotedIdent>`[^`]+`)" +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
@@ -39,7 +40,14 @@ func UnquoteIdent() participle.Option {
 type Boolean bool
 
 func (b *Boolean) Capture(values []string) error {
-	*b = values[0] == "TRUE"
+	*b = strings.ToUpper(values[0]) == "TRUE"
+	return nil
+}
+
+type ScanDescending bool
+
+func (b *ScanDescending) Capture(values []string) error {
+	*b = strings.ToUpper(values[0]) == "DESC"
 	return nil
 }
 
@@ -49,6 +57,7 @@ type Select struct {
 	From       string                `"FROM" @Ident`
 	Index      *string               `( "USE" "INDEX" "(" @Ident ")" )?`
 	Where      *AndExpression        `( "WHERE" @@ )?`
+	Descending *ScanDescending       `( @"ASC" | @"DESC" )?`
 	Limit      *int                  `( "LIMIT" @Number )?`
 }
 

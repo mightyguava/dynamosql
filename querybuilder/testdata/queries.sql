@@ -13,5 +13,5 @@ SELECT title, year FROM movies WHERE title = :title AND year > 2009 AND escaped 
 SELECT `foo.bar`, `foo`.`bar` FROM movies WHERE title = :title
 -- Global Secondary Index with different hash key
 SELECT * FROM gamescores USE INDEX (GameTitleIndex) WHERE GameTitle = :title AND UserId > "45"
--- LIMIT
-SELECT * FROM gamescores WHERE UserId = "103" LIMIT 1
+-- LIMIT and DESC
+SELECT * FROM gamescores WHERE UserId = "103" DESC LIMIT 1

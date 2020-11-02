@@ -8,6 +8,7 @@
     "From": "movies",
     "Index": null,
     "Where": null,
+    "Descending": null,
     "Limit": null
   }
 }

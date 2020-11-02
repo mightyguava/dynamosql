@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT * FROM movies WHERE title = :title",
+  "Query": "SELECT * FROM movies WHERE UserId = True",
   "AST": {
     "Projection": {
       "All": true,
@@ -16,7 +16,7 @@
             "Operand": {
               "Fragment": [
                 {
-                  "Symbol": "title",
+                  "Symbol": "UserId",
                   "Indexes": null
                 }
               ]
@@ -26,10 +26,10 @@
                 "Operator": "=",
                 "Operand": {
                   "Value": {
-                    "PlaceHolder": ":title",
+                    "PlaceHolder": null,
                     "Number": null,
                     "String": null,
-                    "Boolean": null,
+                    "Boolean": true,
                     "Null": false
                   },
                   "SymbolRef": null

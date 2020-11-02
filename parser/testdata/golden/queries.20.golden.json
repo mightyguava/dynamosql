@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT * FROM movies WHERE title = :title",
+  "Query": "SELECT * FROM movies WHERE UserId = :UserId DESC",
   "AST": {
     "Projection": {
       "All": true,
@@ -16,7 +16,7 @@
             "Operand": {
               "Fragment": [
                 {
-                  "Symbol": "title",
+                  "Symbol": "UserId",
                   "Indexes": null
                 }
               ]
@@ -26,7 +26,7 @@
                 "Operator": "=",
                 "Operand": {
                   "Value": {
-                    "PlaceHolder": ":title",
+                    "PlaceHolder": ":UserId",
                     "Number": null,
                     "String": null,
                     "Boolean": null,
@@ -43,7 +43,7 @@
         }
       ]
     },
-    "Descending": null,
+    "Descending": true,
     "Limit": null
   }
 }

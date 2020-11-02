@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT * FROM gamescores WHERE UserId = \"103\" LIMIT 1",
+  "Query": "SELECT * FROM gamescores WHERE UserId = \"103\" DESC LIMIT 1",
   "Prepared": {
     "Query": {
       "AttributesToGet": null,
@@ -16,7 +16,7 @@
       "ProjectionExpression": null,
       "QueryFilter": null,
       "ReturnConsumedCapacity": null,
-      "ScanIndexForward": null,
+      "ScanIndexForward": false,
       "Select": null,
       "TableName": "gamescores"
     },

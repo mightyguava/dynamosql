@@ -165,6 +165,9 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	if ast.Limit != nil {
 		req.Limit = aws.Int64(int64(*ast.Limit))
 	}
+	if ast.Descending != nil {
+		req.ScanIndexForward = aws.Bool(!bool(*ast.Descending))
+	}
 	return &PreparedQuery{
 		Query:       req,
 		Columns:     ast.Projection.Columns,
