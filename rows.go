@@ -1,4 +1,4 @@
-package driver
+package dynamosql
 
 import (
 	"database/sql/driver"

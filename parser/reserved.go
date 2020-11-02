@@ -1,4 +1,4 @@
-package dynamosql
+package parser
 
 import (
 	"strings"

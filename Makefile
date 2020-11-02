@@ -15,7 +15,7 @@ test:
 update-golden:
 	go test ./parser -update -clean
 	go test ./querybuilder -update -clean
-	go test ./driver -update -clean
+	go test . -update -clean
 
 lint:
 	golangci-lint run --config .golangci.yml

@@ -1,4 +1,4 @@
-package driver
+package dynamosql
 
 import (
 	"bufio"
@@ -13,7 +13,6 @@ import (
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mightyguava/dynamosql"
 	"github.com/mightyguava/dynamosql/testing/fixtures"
 )
 
@@ -98,7 +97,7 @@ func TestDriverGolden(t *testing.T) {
 					panic("unexpected code path")
 				}
 				for rows.Next() {
-					err = rows.Scan(dynamosql.Document(doc))
+					err = rows.Scan(Document(doc))
 					require.NoError(t, err, query)
 					results = append(results, repr.String(doc))
 				}

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
-	"github.com/mightyguava/dynamosql"
 	"github.com/mightyguava/dynamosql/parser"
 	"github.com/mightyguava/dynamosql/schema"
 )
@@ -234,7 +233,7 @@ func (c *Context) BuildPath(path *parser.DocumentPath) string {
 }
 
 func (c *Context) substitute(symbol string) string {
-	if dynamosql.IsReservedWord(symbol) {
+	if parser.IsReservedWord(symbol) {
 		sub := "#" + symbol
 		c.Substitutions[sub] = symbol
 		return sub
