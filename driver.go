@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 
 	"github.com/mightyguava/dynamosql/schema"
 )
@@ -25,6 +26,9 @@ var _ driver.DriverContext = &Driver{}
 
 // Config provides optional settings to the DynamoDB driver.
 type Config struct {
+	// If set, the driver will use this DynamoDB client. The Session param and the connection string will be ignored
+	DynamoDB dynamodbiface.DynamoDBAPI
+	// If set, and DynamoDB is not set, the driver will try to create a DynamoDB client using this session.
 	Session *session.Session
 }
 
@@ -36,6 +40,25 @@ func New(cfg Config) *Driver {
 	return &Driver{
 		cfg: cfg,
 	}
+}
+
+// NewDBWithClient returns a sql.DB backed by dynamosql using the given DynamoDB client.
+func NewDBWithClient(ddb dynamodbiface.DynamoDBAPI) *sql.DB {
+	return newDB(Config{DynamoDB: ddb})
+}
+
+// NewDBWithSession returns a sql.DB backed by dynamosql with a DynamoDB client constructed from the given Session.
+func NewDBWithSession(sess *session.Session) *sql.DB {
+	return newDB(Config{Session: sess})
+}
+
+func newDB(cfg Config) *sql.DB {
+	conn, err := New(cfg).OpenConnector("")
+	if err != nil {
+		// OpenConnector does not return error if a Session or DynamoDB is provided.
+		panic("unexpected error")
+	}
+	return sql.OpenDB(conn)
 }
 
 // Open a connection using the connection string.
