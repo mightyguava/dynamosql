@@ -137,7 +137,7 @@ func (a FunctionArgument) String() string {
 }
 
 type ConditionOperand struct {
-	Operand      *SymbolRef    `@@`
+	Operand      *DocumentPath `@@`
 	ConditionRHS *ConditionRHS `@@`
 }
 
@@ -162,14 +162,16 @@ type Between struct {
 }
 
 type Operand struct {
-	Value     *Value     `  @@`
-	SymbolRef *SymbolRef `| @@`
+	Value     *Value        `  @@`
+	SymbolRef *DocumentPath `| @@`
 }
 
 type DocumentPath struct {
 	Fragment []PathFragment `@@ ( "." @@ )*`
 }
 
+// String marshals the DocumentPath into a human readable format. Do not use this function when marshaling
+// to expressions, because substitutions need to be applied first for reserved words.
 func (p DocumentPath) String() string {
 	buf := &bytes.Buffer{}
 	buf.WriteString(p.Fragment[0].String())
@@ -178,10 +180,6 @@ func (p DocumentPath) String() string {
 		buf.WriteString(f.String())
 	}
 	return buf.String()
-}
-
-type SymbolRef struct {
-	Symbol string `@Ident @{ "." Ident }`
 }
 
 type PathFragment struct {

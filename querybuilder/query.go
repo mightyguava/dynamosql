@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
+	"github.com/mightyguava/dynamosql"
 	"github.com/mightyguava/dynamosql/parser"
 	"github.com/mightyguava/dynamosql/schema"
 )
@@ -133,7 +134,7 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	}
 	var projectionExpr *string
 	if !ast.Projection.All {
-		expr, err := buildProjectionExpression(ast.Projection)
+		expr, err := buildProjectionExpression(ctx, ast.Projection)
 		if err != nil {
 			return nil, err
 		}
@@ -147,6 +148,9 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	if filterExpr != "" {
 		req.FilterExpression = aws.String(filterExpr)
 	}
+	if len(ctx.Substitutions) > 0 {
+		req.ExpressionAttributeNames = aws.StringMap(ctx.Substitutions)
+	}
 	return &PreparedQuery{
 		Query:       req,
 		Columns:     ast.Projection.Columns,
@@ -155,19 +159,22 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 	}, nil
 }
 
+// Context tracks expression state as DynamoDB request is built.
 type Context struct {
-	Table       *schema.Table
-	FreeParams  map[string]Empty
-	FixedParams map[string]interface{}
+	Table         *schema.Table
+	FreeParams    map[string]Empty
+	FixedParams   map[string]interface{}
+	Substitutions map[string]string
 
 	genParamCount int
 }
 
 func NewContext(table *schema.Table) *Context {
 	return &Context{
-		Table:       table,
-		FreeParams:  make(map[string]Empty),
-		FixedParams: make(map[string]interface{}),
+		Table:         table,
+		FreeParams:    make(map[string]Empty),
+		FixedParams:   make(map[string]interface{}),
+		Substitutions: make(map[string]string),
 	}
 }
 
@@ -175,6 +182,28 @@ func NewContext(table *schema.Table) *Context {
 func (c *Context) NextGeneratedParam() string {
 	c.genParamCount++
 	return fmt.Sprintf(":_gen%d", c.genParamCount)
+}
+
+// Substitute applies substitutions for reserved keywords in a parser.DocumentPath and marshals it into string format.
+func (c *Context) Substitute(path *parser.DocumentPath) string {
+	buf := &bytes.Buffer{}
+	for i, frag := range path.Fragment {
+		if i != 0 {
+			buf.WriteString(".")
+		}
+		symbol := frag.Symbol
+		if dynamosql.IsReservedWord(symbol) {
+			symbol = "#" + symbol
+			c.Substitutions[symbol] = frag.Symbol
+		}
+		buf.WriteString(symbol)
+		for _, idx := range frag.Indexes {
+			buf.WriteRune('[')
+			buf.WriteString(strconv.Itoa(idx))
+			buf.WriteRune(']')
+		}
+	}
+	return buf.String()
 }
 
 type keyAndFilter struct {
@@ -191,7 +220,7 @@ func extractKeyExpressions(expr *parser.AndExpression, isKey func(string) bool) 
 		return v
 	}
 	for _, term := range expr.And {
-		if term.Operand != nil && isKey(term.Operand.Operand.Symbol) ||
+		if term.Operand != nil && isKey(term.Operand.Operand.String()) ||
 			term.Function != nil && term.Function.FirstArgIsRef() && isKey(term.Function.Args[0].DocumentPath.String()) {
 			v.Key.And = append(v.Key.And, term)
 		} else {
@@ -221,7 +250,7 @@ func buildKeyExpression(ctx *Context, key *parser.AndExpression) (string, error)
 			}
 			expr = visitor.VisitSimpleExpression(subExpr.Function)
 		} else {
-			key = subExpr.Operand.Operand.Symbol
+			key = subExpr.Operand.Operand.String()
 			if key == ctx.Table.HashKey {
 				if subExpr.Operand.ConditionRHS.Compare == nil || subExpr.Operand.ConditionRHS.Compare.Operator != "=" {
 					return "", errHashKey(ctx.Table.HashKey)
@@ -299,8 +328,8 @@ func (v *visitor) VisitFilterExpression(n interface{}) (string, error) {
 	case *parser.Condition:
 		switch {
 		case node.Operand != nil:
-			if v.Context.Table.IsKey(node.Operand.Operand.Symbol) {
-				return "", fmt.Errorf("partition key %q may not appear in nested expression", node.Operand.Operand.Symbol)
+			if v.Context.Table.IsKey(node.Operand.Operand.String()) {
+				return "", fmt.Errorf("partition key %q may not appear in nested expression", node.Operand.Operand.String())
 			}
 			return v.VisitSimpleExpression(node.Operand), nil
 		case node.Function != nil:
@@ -336,7 +365,7 @@ func (v *visitor) VisitFilterExpression(n interface{}) (string, error) {
 func (v *visitor) VisitSimpleExpression(n interface{}) string {
 	switch node := n.(type) {
 	case *parser.ConditionOperand:
-		return node.Operand.Symbol + " " + v.VisitSimpleExpression(node.ConditionRHS)
+		return v.Substitute(node.Operand) + " " + v.VisitSimpleExpression(node.ConditionRHS)
 	case *parser.FunctionExpression:
 		argStr := make([]string, len(node.Args))
 		for i, arg := range node.Args {
@@ -345,7 +374,7 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 		return fmt.Sprintf("%s(%s)", node.Function, strings.Join(argStr, ", "))
 	case *parser.FunctionArgument:
 		if node.DocumentPath != nil {
-			return node.DocumentPath.String()
+			return v.Substitute(node.DocumentPath)
 		}
 		return v.VisitSimpleExpression(node.Value)
 	case *parser.ConditionRHS:
@@ -368,7 +397,7 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 		return fmt.Sprintf(" IN (%s)", v.VisitSimpleExpression(node.Values))
 	case *parser.Operand:
 		if node.SymbolRef != nil {
-			return node.SymbolRef.Symbol
+			return v.Substitute(node.SymbolRef)
 		}
 		return v.VisitSimpleExpression(node.Value)
 	case *parser.Value:
@@ -400,7 +429,7 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 	}
 }
 
-func buildProjectionExpression(expr *parser.ProjectionExpression) (string, error) {
+func buildProjectionExpression(ctx *Context, expr *parser.ProjectionExpression) (string, error) {
 	cols := make([]*parser.DocumentPath, 0, len(expr.Columns))
 	for _, col := range expr.Columns {
 		if col.DocumentPath != nil {
@@ -420,7 +449,7 @@ func buildProjectionExpression(expr *parser.ProjectionExpression) (string, error
 		if i != 0 {
 			buf.WriteString(", ")
 		}
-		buf.WriteString(col.String())
+		buf.WriteString(ctx.Substitute(col))
 	}
 	return buf.String(), nil
 }

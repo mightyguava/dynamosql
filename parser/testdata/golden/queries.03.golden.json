@@ -36,7 +36,12 @@
           "Not": null,
           "Operand": {
             "Operand": {
-              "Symbol": "title"
+              "Fragment": [
+                {
+                  "Symbol": "title",
+                  "Indexes": null
+                }
+              ]
             },
             "ConditionRHS": {
               "Compare": {
@@ -63,7 +68,12 @@
           "Not": null,
           "Operand": {
             "Operand": {
-              "Symbol": "year"
+              "Fragment": [
+                {
+                  "Symbol": "year",
+                  "Indexes": null
+                }
+              ]
             },
             "ConditionRHS": {
               "Compare": {

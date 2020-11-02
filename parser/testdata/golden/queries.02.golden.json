@@ -36,7 +36,12 @@
           "Not": null,
           "Operand": {
             "Operand": {
-              "Symbol": "title"
+              "Fragment": [
+                {
+                  "Symbol": "title",
+                  "Indexes": null
+                }
+              ]
             },
             "ConditionRHS": {
               "Compare": {

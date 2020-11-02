@@ -114,7 +114,12 @@
           "Not": null,
           "Operand": {
             "Operand": {
-              "Symbol": "UserId"
+              "Fragment": [
+                {
+                  "Symbol": "UserId",
+                  "Indexes": null
+                }
+              ]
             },
             "ConditionRHS": {
               "Compare": {

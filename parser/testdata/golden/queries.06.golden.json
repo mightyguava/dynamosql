@@ -36,7 +36,12 @@
           "Not": null,
           "Operand": {
             "Operand": {
-              "Symbol": "title"
+              "Fragment": [
+                {
+                  "Symbol": "title",
+                  "Indexes": null
+                }
+              ]
             },
             "ConditionRHS": {
               "Compare": {
@@ -69,7 +74,12 @@
                       "Not": null,
                       "Operand": {
                         "Operand": {
-                          "Symbol": "year"
+                          "Fragment": [
+                            {
+                              "Symbol": "year",
+                              "Indexes": null
+                            }
+                          ]
                         },
                         "ConditionRHS": {
                           "Compare": null,
@@ -109,7 +119,12 @@
                       "Not": null,
                       "Operand": {
                         "Operand": {
-                          "Symbol": "actor"
+                          "Fragment": [
+                            {
+                              "Symbol": "actor",
+                              "Indexes": null
+                            }
+                          ]
                         },
                         "ConditionRHS": {
                           "Compare": {

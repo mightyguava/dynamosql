@@ -23,7 +23,18 @@ func TestBuildQuery(t *testing.T) {
 		Query    string
 		Prepared *PreparedQuery
 	}
-	table := schema.NewTableFromCreate(fixtures.GameScores.Create)
+	moviesTable := schema.NewTableFromCreate(fixtures.Movies.Create)
+	gameScoresTable := schema.NewTableFromCreate(fixtures.GameScores.Create)
+	getTable := func(q string) *schema.Table {
+		if strings.Contains(q, "FROM movies") {
+			return moviesTable
+		}
+		if strings.Contains(q, "FROM gamescores") {
+			return gameScoresTable
+		}
+		t.Fatalf("invalid table for query %s", q)
+		return nil
+	}
 
 	queries, err := os.Open("testdata/queries.sql")
 	require.NoError(t, err)
@@ -38,9 +49,10 @@ func TestBuildQuery(t *testing.T) {
 			continue
 		}
 		err := parser.Parser.ParseString(queryStr, &ast)
-		require.NoError(t, err, "Parse: %s:\n%s", queryStr, repr.String(ast, repr.Indent("  ")))
-		query, err := buildQuery(table, ast)
-		require.NoError(t, err)
+		msg := fmt.Sprintf("Parse: %s\n%s", queryStr, repr.String(ast, repr.Indent("  ")))
+		require.NoError(t, err, msg)
+		query, err := buildQuery(getTable(queryStr), ast)
+		require.NoError(t, err, msg)
 		parsed = append(parsed, item{
 			Query:    queryStr,
 			Prepared: query,
