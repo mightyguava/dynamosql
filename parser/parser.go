@@ -54,7 +54,7 @@ func (b *ScanDescending) Capture(values []string) error {
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
 	Projection *ProjectionExpression `"SELECT" @@`
-	From       string                `"FROM" @Ident`
+	From       string                `"FROM" @Ident ( @"." @Ident )*`
 	Index      *string               `( "USE" "INDEX" "(" @Ident ")" )?`
 	Where      *AndExpression        `( "WHERE" @@ )?`
 	Descending *ScanDescending       `( @"ASC" | @"DESC" )?`

@@ -31,3 +31,5 @@ SELECT * FROM movies USE INDEX (some_index) WHERE UserId = :UserId
 SELECT * FROM movies WHERE UserId = True
 -- DESC parsing
 SELECT * FROM movies WHERE UserId = :UserId DESC
+-- Dot in table name
+SELECT * FROM namespaced.movies WHERE UserId = :UserId
