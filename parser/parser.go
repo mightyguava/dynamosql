@@ -23,6 +23,7 @@ var (
 		participle.Lexer(Lexer),
 		participle.Unquote("String"),
 		participle.CaseInsensitive("Keyword"),
+		participle.UseLookahead(2),
 	)
 )
 
@@ -42,7 +43,7 @@ type Select struct {
 }
 
 type ProjectionExpression struct {
-	All     bool                `  @"*"`
+	All     bool                `  ( @"*" | "document" "(" @"*" ")" )`
 	Columns []*ProjectionColumn `| @@ ( "," @@ )*`
 }
 

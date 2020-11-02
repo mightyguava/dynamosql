@@ -23,3 +23,5 @@ SELECT document(UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.L
 SELECT UserId, document(TopScore) FROM gamescores WHERE UserId = :UserId
 -- Quoted keywords
 SELECT `SELECT`.`foo` FROM gamescores WHERE UserId = :UserId
+-- document(*) is treated the same as *
+SELECT document(*) FROM gamescores WHERE UserId = :UserId
