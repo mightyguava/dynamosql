@@ -73,15 +73,20 @@ func (d *Driver) Open(connStr string) (driver.Conn, error) {
 // OpenConnector initializes and returns a Connector. The db/sql package will call this exactly once
 // per sql.Open() call. New connections to the database will use the returned Connector.
 func (d *Driver) OpenConnector(connStr string) (driver.Connector, error) {
-	var err error
-	sess := d.cfg.Session
-	if sess == nil {
-		sess, err = session.NewSession(nil)
-		if err != nil {
-			return nil, err
+	var dynamo dynamodbiface.DynamoDBAPI
+	if d.cfg.DynamoDB != nil {
+		dynamo = d.cfg.DynamoDB
+	} else {
+		var err error
+		sess := d.cfg.Session
+		if sess == nil {
+			sess, err = session.NewSession(nil)
+			if err != nil {
+				return nil, err
+			}
 		}
+		dynamo = dynamodb.New(sess)
 	}
-	dynamo := dynamodb.New(sess)
 	return &connector{
 		dynamo: dynamo,
 		driver: d,
@@ -91,7 +96,7 @@ func (d *Driver) OpenConnector(connStr string) (driver.Connector, error) {
 
 type connector struct {
 	driver *Driver
-	dynamo *dynamodb.DynamoDB
+	dynamo dynamodbiface.DynamoDBAPI
 	tables *schema.TableLoader
 }
 

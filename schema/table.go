@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -125,12 +126,12 @@ type Index struct {
 
 // TableLoader is a loading cache of DynamoDB table schemas.
 type TableLoader struct {
-	dynamo *dynamodb.DynamoDB
+	dynamo dynamodbiface.DynamoDBAPI
 	tables sync.Map
 	load   singleflight.Group
 }
 
-func NewTableLoader(dynamo *dynamodb.DynamoDB) *TableLoader {
+func NewTableLoader(dynamo dynamodbiface.DynamoDBAPI) *TableLoader {
 	return &TableLoader{dynamo: dynamo}
 }
 

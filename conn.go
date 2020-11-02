@@ -6,13 +6,14 @@ import (
 	"io"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 
 	"github.com/mightyguava/dynamosql/querybuilder"
 	"github.com/mightyguava/dynamosql/schema"
 )
 
 type conn struct {
-	dynamo *dynamodb.DynamoDB
+	dynamo dynamodbiface.DynamoDBAPI
 	tables *schema.TableLoader
 }
 
