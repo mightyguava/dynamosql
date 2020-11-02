@@ -1,0 +1,29 @@
+{
+  "Query": "SELECT * FROM gamescores WHERE UserId = \"103\" LIMIT 1",
+  "Prepared": {
+    "Query": {
+      "AttributesToGet": null,
+      "ConditionalOperator": null,
+      "ConsistentRead": null,
+      "ExclusiveStartKey": null,
+      "ExpressionAttributeNames": null,
+      "ExpressionAttributeValues": null,
+      "FilterExpression": null,
+      "IndexName": null,
+      "KeyConditionExpression": "UserId = :_gen1",
+      "KeyConditions": null,
+      "Limit": 1,
+      "ProjectionExpression": null,
+      "QueryFilter": null,
+      "ReturnConsumedCapacity": null,
+      "ScanIndexForward": null,
+      "Select": null,
+      "TableName": "gamescores"
+    },
+    "Columns": null,
+    "FreeParams": {},
+    "FixedParams": {
+      ":_gen1": "103"
+    }
+  }
+}
