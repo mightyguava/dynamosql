@@ -12,20 +12,29 @@ import (
 var (
 	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
 		`|(?P<Keyword>(?i)SELECT|FROM|WHERE|MINUS|EXCEPT|INTERSECT|ORDER|LIMIT|OFFSET|TRUE|FALSE|NULL|IS|NOT|ANY|SOME|BETWEEN|AND|OR|AS)` +
+		"|(?P<QuotedIdent>`[^`]+`)" +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Operators><>|!=|<=|>=|[-+*/%:,.()=<>\[\]])` +
-		"|`",
+		`|(?P<Operators><>|!=|<=|>=|[-+*/%:,.()=<>\[\]])`,
 	))
 	Parser = participle.MustBuild(
 		&Select{},
 		participle.Lexer(Lexer),
 		participle.Unquote("String"),
+		UnquoteIdent(),
 		participle.CaseInsensitive("Keyword"),
 		participle.UseLookahead(2),
 	)
 )
+
+// UnquoteIdent removes surrounding backticks (`) from quoted identifiers
+func UnquoteIdent() participle.Option {
+	return participle.Map(func(t lexer.Token) (lexer.Token, error) {
+		t.Value = t.Value[1 : len(t.Value)-1]
+		return t, nil
+	}, "QuotedIdent")
+}
 
 type Boolean bool
 
@@ -183,7 +192,7 @@ func (p DocumentPath) String() string {
 }
 
 type PathFragment struct {
-	Symbol  string "(@Ident | \"`\" ( @Ident | @Keyword ) \"`\")"
+	Symbol  string `( @Ident | @QuotedIdent )`
 	Indexes []int  `( "[" @Number "]" )*`
 }
 

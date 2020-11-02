@@ -107,3 +107,13 @@ func TestInvalidQueries(t *testing.T) {
 		goldie.WithNameSuffix(".golden.json"))
 	g.AssertJson(t, "queries_invalid", parsed)
 }
+
+func TestSubstitute(t *testing.T) {
+	ctx := NewContext(nil)
+	require.Equal(t, "hello", ctx.substitute("hello"))
+	require.Equal(t, "#select", ctx.substitute("select"))
+	require.Equal(t, "#select", ctx.substitute("select"))
+	require.Equal(t, "#_gen1", ctx.substitute("foo.bar"))
+	require.Equal(t, "#_gen2", ctx.substitute("foo.bar"))
+	require.Equal(t, "#_gen3", ctx.substitute("foo.bar2"))
+}

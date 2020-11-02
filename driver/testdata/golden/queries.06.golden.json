@@ -1,0 +1,7 @@
+{
+  "Query": "SELECT title, `info.rating` FROM movies WHERE title = \"World War Z\"",
+  "Results": [
+    "title,info.rating",
+    "World War Z,NULL"
+  ]
+}

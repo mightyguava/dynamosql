@@ -9,3 +9,5 @@ SELECT UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.C
 SELECT document(UserId, TopScore, Scores[3], Scores[3][2], Studio.Name, Studio.Location.Country, Studio.Employees[3]) FROM gamescores WHERE UserId = :UserId
 -- Reserved word substitution
 SELECT title, year FROM movies WHERE title = :title AND year > 2009 AND escaped = TRUE
+-- Fields that have dots in them. {"foo.bar": "a"} and {"foo": {"bar": "b"}} are different.
+SELECT `foo.bar`, `foo`.`bar` FROM movies WHERE title = :title

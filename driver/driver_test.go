@@ -103,7 +103,7 @@ func TestDriverGolden(t *testing.T) {
 					results = append(results, repr.String(doc))
 				}
 			} else {
-				row := make([]string, len(cols))
+				row := make([]sql.NullString, len(cols))
 				scanRow := make([]interface{}, len(cols))
 				for i := range row {
 					scanRow[i] = &row[i]
@@ -111,7 +111,7 @@ func TestDriverGolden(t *testing.T) {
 				for rows.Next() {
 					err = rows.Scan(scanRow...)
 					require.NoError(t, err, query)
-					results = append(results, strings.Join(row, ","))
+					results = append(results, strings.Join(stringSlice(row), ","))
 				}
 			}
 			require.NoError(t, rows.Err())
@@ -124,4 +124,16 @@ func TestDriverGolden(t *testing.T) {
 			i++
 		})
 	}
+}
+
+func stringSlice(ns []sql.NullString) []string {
+	ss := make([]string, len(ns))
+	for i := range ns {
+		if !ns[i].Valid {
+			ss[i] = "NULL"
+		} else {
+			ss[i] = ns[i].String
+		}
+	}
+	return ss
 }

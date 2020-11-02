@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -167,6 +168,7 @@ type Context struct {
 	Substitutions map[string]string
 
 	genParamCount int
+	genSubCount   int
 }
 
 func NewContext(table *schema.Table) *Context {
@@ -184,19 +186,14 @@ func (c *Context) NextGeneratedParam() string {
 	return fmt.Sprintf(":_gen%d", c.genParamCount)
 }
 
-// Substitute applies substitutions for reserved keywords in a parser.DocumentPath and marshals it into string format.
-func (c *Context) Substitute(path *parser.DocumentPath) string {
+// BuildPath applies substitutions for reserved keywords in a parser.DocumentPath and marshals it into string format.
+func (c *Context) BuildPath(path *parser.DocumentPath) string {
 	buf := &bytes.Buffer{}
 	for i, frag := range path.Fragment {
 		if i != 0 {
 			buf.WriteString(".")
 		}
-		symbol := frag.Symbol
-		if dynamosql.IsReservedWord(symbol) {
-			symbol = "#" + symbol
-			c.Substitutions[symbol] = frag.Symbol
-		}
-		buf.WriteString(symbol)
+		buf.WriteString(c.substitute(frag.Symbol))
 		for _, idx := range frag.Indexes {
 			buf.WriteRune('[')
 			buf.WriteString(strconv.Itoa(idx))
@@ -205,6 +202,24 @@ func (c *Context) Substitute(path *parser.DocumentPath) string {
 	}
 	return buf.String()
 }
+
+func (c *Context) substitute(symbol string) string {
+	if dynamosql.IsReservedWord(symbol) {
+		sub := "#" + symbol
+		c.Substitutions[sub] = symbol
+		return sub
+	}
+	if !validIdentifierRegexp.MatchString(symbol) {
+		c.genSubCount++
+		sub := fmt.Sprintf("#_gen%d", c.genSubCount)
+		c.Substitutions[sub] = symbol
+		return sub
+	}
+	return symbol
+}
+
+// matches an identifier that is valid for use in an expression
+var validIdentifierRegexp = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 
 type keyAndFilter struct {
 	Key    *parser.AndExpression
@@ -365,7 +380,7 @@ func (v *visitor) VisitFilterExpression(n interface{}) (string, error) {
 func (v *visitor) VisitSimpleExpression(n interface{}) string {
 	switch node := n.(type) {
 	case *parser.ConditionOperand:
-		return v.Substitute(node.Operand) + " " + v.VisitSimpleExpression(node.ConditionRHS)
+		return v.BuildPath(node.Operand) + " " + v.VisitSimpleExpression(node.ConditionRHS)
 	case *parser.FunctionExpression:
 		argStr := make([]string, len(node.Args))
 		for i, arg := range node.Args {
@@ -374,7 +389,7 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 		return fmt.Sprintf("%s(%s)", node.Function, strings.Join(argStr, ", "))
 	case *parser.FunctionArgument:
 		if node.DocumentPath != nil {
-			return v.Substitute(node.DocumentPath)
+			return v.BuildPath(node.DocumentPath)
 		}
 		return v.VisitSimpleExpression(node.Value)
 	case *parser.ConditionRHS:
@@ -397,7 +412,7 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 		return fmt.Sprintf(" IN (%s)", v.VisitSimpleExpression(node.Values))
 	case *parser.Operand:
 		if node.SymbolRef != nil {
-			return v.Substitute(node.SymbolRef)
+			return v.BuildPath(node.SymbolRef)
 		}
 		return v.VisitSimpleExpression(node.Value)
 	case *parser.Value:
@@ -449,7 +464,7 @@ func buildProjectionExpression(ctx *Context, expr *parser.ProjectionExpression) 
 		if i != 0 {
 			buf.WriteString(", ")
 		}
-		buf.WriteString(ctx.Substitute(col))
+		buf.WriteString(ctx.BuildPath(col))
 	}
 	return buf.String(), nil
 }
