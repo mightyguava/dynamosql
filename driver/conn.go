@@ -3,6 +3,7 @@ package driver
 import (
 	"context"
 	"database/sql/driver"
+	"io"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 
@@ -52,7 +53,22 @@ func (c conn) QueryContext(ctx context.Context, query string, args []driver.Name
 		return nil, err
 	}
 	return &rows{
-		req:  q.Query,
+		nextPage: func(lastEvaluatedKey map[string]*dynamodb.AttributeValue) (*dynamodb.QueryOutput, error) {
+			if lastEvaluatedKey == nil {
+				// No more pages
+				return nil, io.EOF
+			}
+			// nolint: govet
+			resp, err := c.dynamo.QueryWithContext(ctx, req)
+			if err != nil {
+				return nil, err
+			}
+			if len(resp.Items) == 0 {
+				// In case the last items were deleted after the last query.
+				return nil, io.EOF
+			}
+			return resp, nil
+		},
 		cols: q.Columns,
 		resp: resp,
 	}, nil

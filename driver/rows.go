@@ -2,7 +2,6 @@ package driver
 
 import (
 	"database/sql/driver"
-	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -11,9 +10,9 @@ import (
 )
 
 type rows struct {
-	req  *dynamodb.QueryInput
-	resp *dynamodb.QueryOutput
-	cols []*parser.ProjectionColumn
+	resp     *dynamodb.QueryOutput
+	nextPage func(lastEvaluatedKey map[string]*dynamodb.AttributeValue) (*dynamodb.QueryOutput, error)
+	cols     []*parser.ProjectionColumn
 
 	nextRow int
 }
@@ -45,7 +44,12 @@ func (r *rows) Close() error {
 
 func (r *rows) Next(dest []driver.Value) error {
 	if r.nextRow >= len(r.resp.Items) {
-		return io.EOF
+		resp, err := r.nextPage(r.resp.LastEvaluatedKey)
+		if err != nil {
+			return err
+		}
+		r.nextRow = 0
+		r.resp = resp
 	}
 	row := r.resp.Items[r.nextRow]
 	r.nextRow++
