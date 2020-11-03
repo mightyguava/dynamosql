@@ -169,7 +169,7 @@ func prepare(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
 		}
 		projectionExpr = aws.String(expr)
 	}
-	if len(ctx.PositionalParams) > 0 && len(ctx.FixedParams) > 0 {
+	if len(ctx.PositionalParams) > 0 && len(ctx.NamedParams) > 0 {
 		return nil, errors.New("cannot mix positional params (?) with named params (:param)")
 	}
 

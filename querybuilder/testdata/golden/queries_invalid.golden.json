@@ -42,5 +42,9 @@
   {
     "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND attribute_exists(GameTitle)",
     "Error": "sort key \"GameTitle\" may not be used with function attribute_exists()"
+  },
+  {
+    "Query": "SELECT * FROM gamescores WHERE UserId = :UserId AND Wins = ?",
+    "Error": "cannot mix positional params (?) with named params (:param)"
   }
 ]

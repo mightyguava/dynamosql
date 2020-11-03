@@ -20,3 +20,5 @@ SELECT * FROM gamescores WHERE UserId = :UserId AND UserId = :UserId2
 SELECT * FROM gamescores WHERE UserId = :UserId AND GameTitle = "A" AND GameTitle = "B"
 -- Sort key only be used with begins_with
 SELECT * FROM gamescores WHERE UserId = :UserId AND attribute_exists(GameTitle)
+-- Mix ? and : placeholders
+SELECT * FROM gamescores WHERE UserId = :UserId AND Wins = ?
