@@ -43,6 +43,7 @@
                 "Operand": {
                   "Value": {
                     "PlaceHolder": ":UserId",
+                    "PositionalPlaceholder": null,
                     "Number": null,
                     "String": null,
                     "Boolean": null,

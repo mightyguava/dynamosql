@@ -25,29 +25,40 @@ func TestDriverBind(t *testing.T) {
 	err = db.Ping()
 	require.NoError(t, err)
 
-	rows, err := db.Query(`SELECT GameTitle, TopScore FROM gamescores WHERE UserId = "101" AND GameTitle > "Meteor"`)
-	require.NoError(t, err)
-
-	var scores []fixtures.GameScore
-	for rows.Next() {
-		var s fixtures.GameScore
-		err = rows.Scan(&s.GameTitle, &s.TopScore)
-		require.NoError(t, err)
-		scores = append(scores, s)
+	readRows := func(rows *sql.Rows) []fixtures.GameScore {
+		var scores []fixtures.GameScore
+		for rows.Next() {
+			var s fixtures.GameScore
+			err = rows.Scan(&s.GameTitle, &s.TopScore)
+			require.NoError(t, err)
+			scores = append(scores, s)
+		}
+		require.NoError(t, rows.Err())
+		return scores
 	}
+	expected := []fixtures.GameScore{
+		{GameTitle: "Meteor Blasters", TopScore: 1000},
+		{GameTitle: "Starship X", TopScore: 24}}
 
-	rows, err = db.Query(`SELECT GameTitle, TopScore FROM gamescores WHERE UserId = :UserId AND GameTitle > :GameTitle`,
-		sql.Named("UserId", "101"),
-		sql.Named("GameTitle", "Meteor"))
-	require.NoError(t, err)
-
-	for rows.Next() {
-		var s fixtures.GameScore
-		err = rows.Scan(&s.GameTitle, &s.TopScore)
+	t.Run("fixed params", func(t *testing.T) {
+		rows, err := db.Query(`SELECT GameTitle, TopScore FROM gamescores WHERE UserId = "101" AND GameTitle > "Meteor"`)
 		require.NoError(t, err)
-		scores = append(scores, s)
-	}
-	repr.Println(scores)
+		require.Equal(t, expected, readRows(rows))
+	})
+
+	t.Run("named params", func(t *testing.T) {
+		rows, err := db.Query(`SELECT GameTitle, TopScore FROM gamescores WHERE UserId = :UserId AND GameTitle > :GameTitle`,
+			sql.Named("UserId", "101"),
+			sql.Named("GameTitle", "Meteor"))
+		require.NoError(t, err)
+		require.Equal(t, expected, readRows(rows))
+	})
+
+	t.Run("positional params", func(t *testing.T) {
+		rows, err := db.Query(`SELECT GameTitle, TopScore FROM gamescores WHERE UserId = ? AND GameTitle > ?`, "101", "Meteor")
+		require.NoError(t, err)
+		require.Equal(t, expected, readRows(rows))
+	})
 }
 
 func TestDriverGolden(t *testing.T) {

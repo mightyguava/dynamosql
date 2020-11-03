@@ -15,3 +15,5 @@ SELECT `foo.bar`, `foo`.`bar` FROM movies WHERE title = :title
 SELECT * FROM gamescores USE INDEX (GameTitleIndex) WHERE GameTitle = :title AND UserId > "45"
 -- LIMIT and DESC
 SELECT * FROM gamescores WHERE UserId = "103" DESC LIMIT 1
+-- positional placeholders (?)
+SELECT * FROM gamescores WHERE UserId = ? AND TopScore > ?

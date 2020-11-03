@@ -50,6 +50,7 @@
                 "Operand": {
                   "Value": {
                     "PlaceHolder": null,
+                    "PositionalPlaceholder": null,
                     "Number": null,
                     "String": "The Dark Knight",
                     "Boolean": null,

@@ -21,12 +21,13 @@
       "TableName": "gamescores"
     },
     "Columns": null,
-    "FreeParams": {
+    "NamedParams": {
       ":MaxGameTitle": {},
       ":MinGameTitle": {},
       ":MinTopScore": {},
       ":UserId": {}
     },
+    "PositionalParams": {},
     "FixedParams": {}
   }
 }

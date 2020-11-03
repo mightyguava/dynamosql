@@ -27,6 +27,7 @@
                 "Operand": {
                   "Value": {
                     "PlaceHolder": ":title",
+                    "PositionalPlaceholder": null,
                     "Number": null,
                     "String": null,
                     "Boolean": null,
@@ -63,6 +64,7 @@
                 "DocumentPath": null,
                 "Value": {
                   "PlaceHolder": null,
+                  "PositionalPlaceholder": null,
                   "Number": null,
                   "String": "Will",
                   "Boolean": null,

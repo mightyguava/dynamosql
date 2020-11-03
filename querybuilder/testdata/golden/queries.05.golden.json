@@ -125,9 +125,10 @@
         }
       }
     ],
-    "FreeParams": {
+    "NamedParams": {
       ":UserId": {}
     },
+    "PositionalParams": {},
     "FixedParams": {}
   }
 }

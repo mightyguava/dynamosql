@@ -21,9 +21,10 @@
       "TableName": "gamescores"
     },
     "Columns": null,
-    "FreeParams": {
+    "NamedParams": {
       ":UserId": {}
     },
+    "PositionalParams": {},
     "FixedParams": {}
   }
 }

@@ -50,9 +50,10 @@
         }
       }
     ],
-    "FreeParams": {
+    "NamedParams": {
       ":title": {}
     },
+    "PositionalParams": {},
     "FixedParams": {}
   }
 }

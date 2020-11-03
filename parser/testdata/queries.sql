@@ -33,3 +33,5 @@ SELECT * FROM movies WHERE UserId = True
 SELECT * FROM movies WHERE UserId = :UserId DESC
 -- Dot in table name
 SELECT * FROM namespaced.movies WHERE UserId = :UserId
+-- positional placeholders (?)
+SELECT * FROM gamescores WHERE UserId = ? AND TopScore > ?

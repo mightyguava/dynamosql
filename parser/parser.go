@@ -17,7 +17,7 @@ var (
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Operators><>|!=|<=|>=|[-+*/%:,.()=<>\[\]])`,
+		`|(?P<Operators><>|!=|<=|>=|[-+*/%:?,.()=<>\[\]])`,
 	))
 	Parser = participle.MustBuild(
 		&Select{},
@@ -221,11 +221,12 @@ func (p PathFragment) String() string {
 }
 
 type Value struct {
-	PlaceHolder *string  `  @":" @Ident`
-	Number      *float64 `| @Number`
-	String      *string  `| @String`
-	Boolean     *Boolean `| @("TRUE" | "FALSE")`
-	Null        bool     `| @"NULL"`
+	PlaceHolder           *string  `  @":" @Ident `
+	PositionalPlaceholder *bool    `| @"?" `
+	Number                *float64 `| @Number`
+	String                *string  `| @String`
+	Boolean               *Boolean `| @("TRUE" | "FALSE")`
+	Null                  bool     `| @"NULL"`
 }
 
 func (v Value) Literal() string {

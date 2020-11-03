@@ -1,5 +1,5 @@
 {
-  "Query": "SELECT * FROM gamescores WHERE UserId = \"103\" DESC LIMIT 1",
+  "Query": "SELECT * FROM gamescores WHERE UserId = ? AND TopScore > ?",
   "Prepared": {
     "Query": {
       "AttributesToGet": null,
@@ -8,23 +8,24 @@
       "ExclusiveStartKey": null,
       "ExpressionAttributeNames": null,
       "ExpressionAttributeValues": null,
-      "FilterExpression": null,
+      "FilterExpression": "TopScore > :_pos2",
       "IndexName": null,
-      "KeyConditionExpression": "UserId = :_gen1",
+      "KeyConditionExpression": "UserId = :_pos1",
       "KeyConditions": null,
-      "Limit": 1,
+      "Limit": null,
       "ProjectionExpression": null,
       "QueryFilter": null,
       "ReturnConsumedCapacity": null,
-      "ScanIndexForward": false,
+      "ScanIndexForward": null,
       "Select": null,
       "TableName": "gamescores"
     },
     "Columns": null,
     "NamedParams": {},
-    "PositionalParams": {},
-    "FixedParams": {
-      ":_gen1": "103"
-    }
+    "PositionalParams": {
+      "1": ":_pos1",
+      "2": ":_pos2"
+    },
+    "FixedParams": {}
   }
 }

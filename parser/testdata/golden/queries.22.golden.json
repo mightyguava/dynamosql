@@ -1,34 +1,11 @@
 {
-  "Query": "SELECT title, year FROM movies WHERE title = \"The Dark Knight\" AND year >= 2009",
+  "Query": "SELECT * FROM gamescores WHERE UserId = ? AND TopScore > ?",
   "AST": {
     "Projection": {
-      "All": false,
-      "Columns": [
-        {
-          "Function": null,
-          "DocumentPath": {
-            "Fragment": [
-              {
-                "Symbol": "title",
-                "Indexes": null
-              }
-            ]
-          }
-        },
-        {
-          "Function": null,
-          "DocumentPath": {
-            "Fragment": [
-              {
-                "Symbol": "year",
-                "Indexes": null
-              }
-            ]
-          }
-        }
-      ]
+      "All": true,
+      "Columns": null
     },
-    "From": "movies",
+    "From": "gamescores",
     "Index": null,
     "Where": {
       "And": [
@@ -39,7 +16,7 @@
             "Operand": {
               "Fragment": [
                 {
-                  "Symbol": "title",
+                  "Symbol": "UserId",
                   "Indexes": null
                 }
               ]
@@ -50,9 +27,9 @@
                 "Operand": {
                   "Value": {
                     "PlaceHolder": null,
-                    "PositionalPlaceholder": null,
+                    "PositionalPlaceholder": true,
                     "Number": null,
-                    "String": "The Dark Knight",
+                    "String": null,
                     "Boolean": null,
                     "Null": false
                   },
@@ -72,19 +49,19 @@
             "Operand": {
               "Fragment": [
                 {
-                  "Symbol": "year",
+                  "Symbol": "TopScore",
                   "Indexes": null
                 }
               ]
             },
             "ConditionRHS": {
               "Compare": {
-                "Operator": ">=",
+                "Operator": ">",
                 "Operand": {
                   "Value": {
                     "PlaceHolder": null,
-                    "PositionalPlaceholder": null,
-                    "Number": 2009,
+                    "PositionalPlaceholder": true,
+                    "Number": null,
                     "String": null,
                     "Boolean": null,
                     "Null": false

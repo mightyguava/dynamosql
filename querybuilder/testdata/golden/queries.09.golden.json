@@ -21,9 +21,10 @@
       "TableName": "gamescores"
     },
     "Columns": null,
-    "FreeParams": {
+    "NamedParams": {
       ":title": {}
     },
+    "PositionalParams": {},
     "FixedParams": {
       ":_gen1": "45"
     }

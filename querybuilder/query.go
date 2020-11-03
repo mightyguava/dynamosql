@@ -20,14 +20,16 @@ import (
 )
 
 var (
-	errPositionalArg = errors.New("positional args not supported, use sql.NamedArg to pass named arguments")
+	errPositionalArg = errors.New("unexpected positional arg, use sql.NamedArg to pass named arguments")
+	errNamedArg      = errors.New("unexpected named arg, to use named args, provided named placeholders like :param")
 )
 
 type PreparedQuery struct {
-	Query       *dynamodb.QueryInput
-	Columns     []*parser.ProjectionColumn
-	FreeParams  FreeParams
-	FixedParams map[string]interface{}
+	Query            *dynamodb.QueryInput
+	Columns          []*parser.ProjectionColumn
+	NamedParams      NamedParams
+	PositionalParams map[int]string
+	FixedParams      map[string]interface{}
 }
 
 func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string) (*PreparedQuery, error) {
@@ -39,11 +41,11 @@ func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string)
 	if err != nil {
 		return nil, err
 	}
-	return buildQuery(table, ast)
+	return prepare(table, ast)
 }
 
-func (pq *PreparedQuery) Build(args []driver.NamedValue) (*dynamodb.QueryInput, error) {
-	values, err := bindArgs(pq.FixedParams, pq.FreeParams, args)
+func (pq *PreparedQuery) NewRequest(args []driver.NamedValue) (*dynamodb.QueryInput, error) {
+	values, err := bindArgs(pq.FixedParams, pq.NamedParams, pq.PositionalParams, args)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +54,8 @@ func (pq *PreparedQuery) Build(args []driver.NamedValue) (*dynamodb.QueryInput, 
 	return &req, nil
 }
 
-func bindArgs(fixedParams map[string]interface{}, freeParams FreeParams, args []driver.NamedValue) (map[string]*dynamodb.AttributeValue, error) {
-	values := make(map[string]*dynamodb.AttributeValue, len(freeParams)+len(fixedParams))
+func bindArgs(fixedParams map[string]interface{}, namedParams NamedParams, positionalParams map[int]string, args []driver.NamedValue) (map[string]*dynamodb.AttributeValue, error) {
+	values := make(map[string]*dynamodb.AttributeValue, len(namedParams)+len(fixedParams))
 
 	// Bind fixed params
 	for k, v := range fixedParams {
@@ -64,29 +66,49 @@ func bindArgs(fixedParams map[string]interface{}, freeParams FreeParams, args []
 		values[k] = av
 	}
 
-	// Bind free params using the args
-	freeParams = freeParams.Clone()
-	for _, arg := range args {
-		if arg.Name == "" {
-			return nil, errPositionalArg
+	if len(namedParams) > 0 {
+		// Bind named params using the args
+		namedParams = namedParams.Clone()
+		for _, arg := range args {
+			if arg.Name == "" {
+				return nil, errPositionalArg
+			}
+			name := ":" + arg.Name
+			_, ok := namedParams[name]
+			if !ok {
+				return nil, fmt.Errorf("binding %q not found", name)
+			}
+			av, err := toAttributeValue(arg.Value)
+			if err != nil {
+				return nil, err
+			}
+			values[name] = av
+			delete(namedParams, name)
 		}
-		name := ":" + arg.Name
-		_, ok := freeParams[name]
-		if !ok {
-			return nil, fmt.Errorf("binding %q not found", name)
+
+		if len(namedParams) > 0 {
+			for k := range namedParams {
+				return nil, fmt.Errorf("missing argument for binding %q", k)
+			}
 		}
-		av, err := toAttributeValue(arg.Value)
-		if err != nil {
-			return nil, err
+	} else {
+		// Bind positional params using the args
+		if len(args) != len(positionalParams) {
+			return nil, fmt.Errorf("wrong number of arguments, expected %d, got %d", len(positionalParams), len(args))
 		}
-		values[name] = av
-		delete(freeParams, name)
+		for _, arg := range args {
+			if arg.Name != "" {
+				return nil, errNamedArg
+			}
+			name := positionalParams[arg.Ordinal]
+			av, err := toAttributeValue(arg.Value)
+			if err != nil {
+				return nil, err
+			}
+			values[name] = av
+		}
 	}
-	if len(freeParams) > 0 {
-		for k := range freeParams {
-			return nil, fmt.Errorf("missing argument for binding %q", k)
-		}
-	}
+
 	return values, nil
 }
 
@@ -110,17 +132,17 @@ func toAttributeValue(attr interface{}) (*dynamodb.AttributeValue, error) {
 type KeyExpression struct{}
 type FilterExpression struct{}
 
-type FreeParams map[string]Empty
+type NamedParams map[string]Empty
 
-func (p FreeParams) Clone() FreeParams {
-	copy := make(FreeParams)
+func (p NamedParams) Clone() NamedParams {
+	copy := make(NamedParams)
 	for k, v := range p {
 		copy[k] = v
 	}
 	return copy
 }
 
-func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
+func prepare(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
 	index := ""
 	if ast.Index != nil {
 		index = *ast.Index
@@ -147,6 +169,10 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 		}
 		projectionExpr = aws.String(expr)
 	}
+	if len(ctx.PositionalParams) > 0 && len(ctx.FixedParams) > 0 {
+		return nil, errors.New("cannot mix positional params (?) with named params (:param)")
+	}
+
 	req := &dynamodb.QueryInput{
 		TableName:              &ast.From,
 		ProjectionExpression:   projectionExpr,
@@ -168,23 +194,26 @@ func buildQuery(table *schema.Table, ast parser.Select) (*PreparedQuery, error) 
 		req.ScanIndexForward = aws.Bool(!bool(*ast.Descending))
 	}
 	return &PreparedQuery{
-		Query:       req,
-		Columns:     ast.Projection.Columns,
-		FreeParams:  visit.Context.FreeParams,
-		FixedParams: visit.Context.FixedParams,
+		Query:            req,
+		Columns:          ast.Projection.Columns,
+		NamedParams:      visit.Context.NamedParams,
+		PositionalParams: visit.Context.PositionalParams,
+		FixedParams:      visit.Context.FixedParams,
 	}, nil
 }
 
 // Context tracks expression state as DynamoDB request is built.
 type Context struct {
-	HashKey       string
-	SortKey       string
-	FreeParams    map[string]Empty
-	FixedParams   map[string]interface{}
-	Substitutions map[string]string
+	HashKey          string
+	SortKey          string
+	NamedParams      map[string]Empty
+	PositionalParams map[int]string
+	FixedParams      map[string]interface{}
+	Substitutions    map[string]string
 
-	genParamCount int
-	genSubCount   int
+	positionalParamCount int
+	genParamCount        int
+	genSubCount          int
 }
 
 func NewContext(table *schema.Table, index string) *Context {
@@ -196,11 +225,12 @@ func NewContext(table *schema.Table, index string) *Context {
 		hashKey, sortKey = idx.HashKey, idx.SortKey
 	}
 	return &Context{
-		HashKey:       hashKey,
-		SortKey:       sortKey,
-		FreeParams:    make(map[string]Empty),
-		FixedParams:   make(map[string]interface{}),
-		Substitutions: make(map[string]string),
+		HashKey:          hashKey,
+		SortKey:          sortKey,
+		NamedParams:      make(map[string]Empty),
+		PositionalParams: make(map[int]string),
+		FixedParams:      make(map[string]interface{}),
+		Substitutions:    make(map[string]string),
 	}
 }
 
@@ -209,7 +239,15 @@ func (c *Context) IsKey(field string) bool {
 	return c.HashKey == field || c.SortKey == field
 }
 
-// NextGeneratedParam returns the next generated parameter placeholder name.
+// NextPositionalParam returns the next generated positional placeholder name. DynamoDB does not support positional
+// parameters so we simulate it by generating named placeholders.
+func (c *Context) NextPositionalParam() (int, string) {
+	c.positionalParamCount++
+	return c.positionalParamCount, fmt.Sprintf(":_pos%d", c.positionalParamCount)
+}
+
+// NextGeneratedParam returns the next generated parameter placeholder name. DynamoDB requires concrete values to
+// be passed as expression values, so we simulate expression values by generating placeholders.
 func (c *Context) NextGeneratedParam() string {
 	c.genParamCount++
 	return fmt.Sprintf(":_gen%d", c.genParamCount)
@@ -447,8 +485,12 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 	case *parser.Value:
 		switch {
 		case node.PlaceHolder != nil:
-			v.Context.FreeParams[*node.PlaceHolder] = Empty{}
+			v.Context.NamedParams[*node.PlaceHolder] = Empty{}
 			return *node.PlaceHolder
+		case node.PositionalPlaceholder != nil:
+			num, str := v.Context.NextPositionalParam()
+			v.Context.PositionalParams[num] = str
+			return str
 		case node.Number != nil:
 			name := v.Context.NextGeneratedParam()
 			v.Context.FixedParams[name] = *node.Number

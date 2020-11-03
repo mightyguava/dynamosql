@@ -51,7 +51,7 @@ func TestBuildQuery(t *testing.T) {
 		err := parser.Parser.ParseString(queryStr, &ast)
 		msg := fmt.Sprintf("Parse: %s\n%s", queryStr, repr.String(ast, repr.Indent("  ")))
 		require.NoError(t, err, msg)
-		query, err := buildQuery(getTable(queryStr), ast)
+		query, err := prepare(getTable(queryStr), ast)
 		require.NoError(t, err, msg)
 		parsed = append(parsed, item{
 			Query:    queryStr,
@@ -89,7 +89,7 @@ func TestInvalidQueries(t *testing.T) {
 		err := parser.Parser.ParseString(queryStr, &ast)
 		if err == nil {
 			var q *PreparedQuery
-			q, err = buildQuery(table, ast)
+			q, err = prepare(table, ast)
 			assert.Error(t, err, "Query: %s\nPrepared Query: %s", queryStr, testutil.MarshalJSON(q))
 		}
 		var errStr string

@@ -2,8 +2,6 @@
 SELECT * FROM gamescores
 -- Partition key required
 SELECT * FROM gamescores WHERE Wins = 3
--- ? positional placeholder is not allowed
-SELECT * FROM gamescores WHERE UserId = "101" AND Wins = ?
 -- $ numbered placeholder is not allowed
 SELECT * FROM gamescores WHERE UserId = "101" AND Wins = $1
 -- OR may not appear at the top level

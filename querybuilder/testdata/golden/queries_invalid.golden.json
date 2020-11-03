@@ -8,10 +8,6 @@
     "Error": "partition key must appear exactly once in the WHERE clause, in an equality condition, such as: WHERE UserId = :param"
   },
   {
-    "Query": "SELECT * FROM gamescores WHERE UserId = \"101\" AND Wins = ?",
-    "Error": "1:58: invalid token '?'"
-  },
-  {
     "Query": "SELECT * FROM gamescores WHERE UserId = \"101\" AND Wins = $1",
     "Error": "1:58: invalid token '$'"
   },
