@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mightyguava/dynamosql/testing/fixtures"
+	"github.com/mightyguava/dynamosql/testing/testutil"
 )
 
 func TestDriverBind(t *testing.T) {
@@ -130,7 +131,7 @@ func TestDriverGolden(t *testing.T) {
 				Query:   query,
 				Results: results,
 			}
-			g.AssertJson(t, fmt.Sprintf("queries.%02d", i), result)
+			g.Assert(t, fmt.Sprintf("queries.%02d", i), []byte(testutil.MarshalJSON(result)))
 			i++
 		})
 	}

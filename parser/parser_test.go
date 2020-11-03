@@ -11,6 +11,8 @@ import (
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/mightyguava/dynamosql/testing/testutil"
 )
 
 func TestGoldenGoodQueries(t *testing.T) {
@@ -41,10 +43,10 @@ func TestGoldenGoodQueries(t *testing.T) {
 
 	g := goldie.New(t,
 		goldie.WithFixtureDir("testdata/golden"),
-		goldie.WithNameSuffix(".golden.json"))
+		goldie.WithNameSuffix(".golden.go"))
 	for i, q := range parsed {
 		t.Logf("Query: %s", q.Query)
-		g.AssertJson(t, fmt.Sprintf("queries.%02d", i), q)
+		g.Assert(t, fmt.Sprintf("queries.%02d", i), []byte(testutil.Repr(q)))
 	}
 }
 
@@ -78,8 +80,8 @@ func TestGoldenBadQueries(t *testing.T) {
 
 	g := goldie.New(t,
 		goldie.WithFixtureDir("testdata/golden"),
-		goldie.WithNameSuffix(".golden.json"))
+		goldie.WithNameSuffix(".golden.go"))
 	for i, q := range parsed {
-		g.AssertJson(t, fmt.Sprintf("bad_queries.%02d", i), q)
+		g.Assert(t, fmt.Sprintf("bad_queries.%02d", i), []byte(testutil.MarshalJSON(q)))
 	}
 }

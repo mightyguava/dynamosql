@@ -61,9 +61,9 @@ func TestBuildQuery(t *testing.T) {
 
 	g := goldie.New(t,
 		goldie.WithFixtureDir("testdata/golden"),
-		goldie.WithNameSuffix(".golden.json"))
+		goldie.WithNameSuffix(".golden.go"))
 	for i, q := range parsed {
-		g.AssertJson(t, fmt.Sprintf("queries.%02d", i), q)
+		g.Assert(t, fmt.Sprintf("queries.%02d", i), []byte(testutil.Repr(q)))
 	}
 }
 
@@ -105,7 +105,7 @@ func TestInvalidQueries(t *testing.T) {
 	g := goldie.New(t,
 		goldie.WithFixtureDir("testdata/golden"),
 		goldie.WithNameSuffix(".golden.json"))
-	g.AssertJson(t, "queries_invalid", parsed)
+	g.Assert(t, "queries_invalid", []byte(testutil.MarshalJSON(parsed)))
 }
 
 func TestSubstitute(t *testing.T) {

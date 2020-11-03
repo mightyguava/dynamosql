@@ -13,4 +13,4 @@ require (
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 )
 
-replace github.com/sebdah/goldie/v2 => github.com/mightyguava/goldie/v2 v2.5.2-0.20201027035444-df66e94788ee
+replace github.com/alecthomas/repr => github.com/mightyguava/repr v0.0.0-20201103194524-c016a8673cf0
