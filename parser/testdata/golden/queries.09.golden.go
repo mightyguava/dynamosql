@@ -7,11 +7,11 @@ parser.row{
     From: "movies",
     Where: &parser.AndExpression{
       And: []*parser.Condition{
-        &parser.Condition{
+        {
           Operand: &parser.ConditionOperand{
             Operand: &parser.DocumentPath{
               Fragment: []parser.PathFragment{
-                parser.PathFragment{
+                {
                   Symbol: "title",
                 },
               },
@@ -28,20 +28,20 @@ parser.row{
             },
           },
         },
-        &parser.Condition{
+        {
           Function: &parser.FunctionExpression{
             Function: "begins_with",
             Args: []*parser.FunctionArgument{
-              &parser.FunctionArgument{
+              {
                 DocumentPath: &parser.DocumentPath{
                   Fragment: []parser.PathFragment{
-                    parser.PathFragment{
+                    {
                       Symbol: "actor",
                     },
                   },
                 },
               },
-              &parser.FunctionArgument{
+              {
                 Value: &parser.Value{
                   String: &"Will",
                 },

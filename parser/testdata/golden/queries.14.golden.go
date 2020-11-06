@@ -3,32 +3,32 @@ parser.row{
   AST: parser.Select{
     Projection: &parser.ProjectionExpression{
       Columns: []*parser.ProjectionColumn{
-        &parser.ProjectionColumn{
+        {
           Function: &parser.FunctionExpression{
             Function: "document",
             Args: []*parser.FunctionArgument{
-              &parser.FunctionArgument{
+              {
                 DocumentPath: &parser.DocumentPath{
                   Fragment: []parser.PathFragment{
-                    parser.PathFragment{
+                    {
                       Symbol: "UserId",
                     },
                   },
                 },
               },
-              &parser.FunctionArgument{
+              {
                 DocumentPath: &parser.DocumentPath{
                   Fragment: []parser.PathFragment{
-                    parser.PathFragment{
+                    {
                       Symbol: "TopScore",
                     },
                   },
                 },
               },
-              &parser.FunctionArgument{
+              {
                 DocumentPath: &parser.DocumentPath{
                   Fragment: []parser.PathFragment{
-                    parser.PathFragment{
+                    {
                       Symbol: "Scores",
                       Indexes: []int{
                         3,
@@ -37,10 +37,10 @@ parser.row{
                   },
                 },
               },
-              &parser.FunctionArgument{
+              {
                 DocumentPath: &parser.DocumentPath{
                   Fragment: []parser.PathFragment{
-                    parser.PathFragment{
+                    {
                       Symbol: "Scores",
                       Indexes: []int{
                         3,
@@ -50,40 +50,40 @@ parser.row{
                   },
                 },
               },
-              &parser.FunctionArgument{
+              {
                 DocumentPath: &parser.DocumentPath{
                   Fragment: []parser.PathFragment{
-                    parser.PathFragment{
+                    {
                       Symbol: "Studio",
                     },
-                    parser.PathFragment{
+                    {
                       Symbol: "Name",
                     },
                   },
                 },
               },
-              &parser.FunctionArgument{
+              {
                 DocumentPath: &parser.DocumentPath{
                   Fragment: []parser.PathFragment{
-                    parser.PathFragment{
+                    {
                       Symbol: "Studio",
                     },
-                    parser.PathFragment{
+                    {
                       Symbol: "Location",
                     },
-                    parser.PathFragment{
+                    {
                       Symbol: "Country",
                     },
                   },
                 },
               },
-              &parser.FunctionArgument{
+              {
                 DocumentPath: &parser.DocumentPath{
                   Fragment: []parser.PathFragment{
-                    parser.PathFragment{
+                    {
                       Symbol: "Studio",
                     },
-                    parser.PathFragment{
+                    {
                       Symbol: "Employees",
                       Indexes: []int{
                         3,
@@ -100,11 +100,11 @@ parser.row{
     From: "gamescores",
     Where: &parser.AndExpression{
       And: []*parser.Condition{
-        &parser.Condition{
+        {
           Operand: &parser.ConditionOperand{
             Operand: &parser.DocumentPath{
               Fragment: []parser.PathFragment{
-                parser.PathFragment{
+                {
                   Symbol: "UserId",
                 },
               },

@@ -3,10 +3,10 @@ parser.row{
   AST: parser.Select{
     Projection: &parser.ProjectionExpression{
       Columns: []*parser.ProjectionColumn{
-        &parser.ProjectionColumn{
+        {
           DocumentPath: &parser.DocumentPath{
             Fragment: []parser.PathFragment{
-              parser.PathFragment{
+              {
                 Symbol: "Scores",
                 Indexes: []int{
                   3,
@@ -15,10 +15,10 @@ parser.row{
             },
           },
         },
-        &parser.ProjectionColumn{
+        {
           DocumentPath: &parser.DocumentPath{
             Fragment: []parser.PathFragment{
-              parser.PathFragment{
+              {
                 Symbol: "Scores",
                 Indexes: []int{
                   3,
@@ -33,11 +33,11 @@ parser.row{
     From: "gamescores",
     Where: &parser.AndExpression{
       And: []*parser.Condition{
-        &parser.Condition{
+        {
           Operand: &parser.ConditionOperand{
             Operand: &parser.DocumentPath{
               Fragment: []parser.PathFragment{
-                parser.PathFragment{
+                {
                   Symbol: "UserId",
                 },
               },

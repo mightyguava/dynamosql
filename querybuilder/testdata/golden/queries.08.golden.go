@@ -11,22 +11,22 @@ querybuilder.item{
       TableName: &"movies",
     },
     Columns: []*parser.ProjectionColumn{
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "foo.bar",
             },
           },
         },
       },
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "foo",
             },
-            parser.PathFragment{
+            {
               Symbol: "bar",
             },
           },

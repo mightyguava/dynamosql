@@ -13,19 +13,19 @@ querybuilder.item{
       TableName: &"movies",
     },
     Columns: []*parser.ProjectionColumn{
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "title",
             },
           },
         },
       },
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "year",
             },
           },

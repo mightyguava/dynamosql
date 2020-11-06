@@ -12,28 +12,28 @@ querybuilder.item{
       TableName: &"gamescores",
     },
     Columns: []*parser.ProjectionColumn{
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "UserId",
             },
           },
         },
       },
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "TopScore",
             },
           },
         },
       },
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "Scores",
               Indexes: []int{
                 3,
@@ -42,10 +42,10 @@ querybuilder.item{
           },
         },
       },
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "Scores",
               Indexes: []int{
                 3,
@@ -55,40 +55,40 @@ querybuilder.item{
           },
         },
       },
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "Studio",
             },
-            parser.PathFragment{
+            {
               Symbol: "Name",
             },
           },
         },
       },
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "Studio",
             },
-            parser.PathFragment{
+            {
               Symbol: "Location",
             },
-            parser.PathFragment{
+            {
               Symbol: "Country",
             },
           },
         },
       },
-      &parser.ProjectionColumn{
+      {
         DocumentPath: &parser.DocumentPath{
           Fragment: []parser.PathFragment{
-            parser.PathFragment{
+            {
               Symbol: "Studio",
             },
-            parser.PathFragment{
+            {
               Symbol: "Employees",
               Indexes: []int{
                 3,

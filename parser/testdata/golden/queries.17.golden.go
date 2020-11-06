@@ -7,11 +7,11 @@ parser.row{
     From: "gamescores",
     Where: &parser.AndExpression{
       And: []*parser.Condition{
-        &parser.Condition{
+        {
           Operand: &parser.ConditionOperand{
             Operand: &parser.DocumentPath{
               Fragment: []parser.PathFragment{
-                parser.PathFragment{
+                {
                   Symbol: "UserId",
                 },
               },
