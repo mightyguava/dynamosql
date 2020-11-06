@@ -5,7 +5,7 @@ parser.row{
       Columns: []*parser.ProjectionColumn{
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "UserId",
               },
@@ -18,7 +18,7 @@ parser.row{
             Args: []*parser.FunctionArgument{
               {
                 DocumentPath: &parser.DocumentPath{
-                  Fragment: []parser.PathFragment{
+                  Fragment: []*parser.PathFragment{
                     {
                       Symbol: "TopScore",
                     },
@@ -36,7 +36,7 @@ parser.row{
         {
           Operand: &parser.ConditionOperand{
             Operand: &parser.DocumentPath{
-              Fragment: []parser.PathFragment{
+              Fragment: []*parser.PathFragment{
                 {
                   Symbol: "UserId",
                 },

@@ -5,7 +5,7 @@ parser.row{
       Columns: []*parser.ProjectionColumn{
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "title",
               },
@@ -14,7 +14,7 @@ parser.row{
         },
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "year",
               },
@@ -29,7 +29,7 @@ parser.row{
         {
           Operand: &parser.ConditionOperand{
             Operand: &parser.DocumentPath{
-              Fragment: []parser.PathFragment{
+              Fragment: []*parser.PathFragment{
                 {
                   Symbol: "title",
                 },
@@ -56,7 +56,7 @@ parser.row{
                     {
                       Operand: &parser.ConditionOperand{
                         Operand: &parser.DocumentPath{
-                          Fragment: []parser.PathFragment{
+                          Fragment: []*parser.PathFragment{
                             {
                               Symbol: "year",
                             },
@@ -85,7 +85,7 @@ parser.row{
                     {
                       Operand: &parser.ConditionOperand{
                         Operand: &parser.DocumentPath{
-                          Fragment: []parser.PathFragment{
+                          Fragment: []*parser.PathFragment{
                             {
                               Symbol: "actor",
                             },

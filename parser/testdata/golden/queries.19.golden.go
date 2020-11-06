@@ -10,7 +10,7 @@ parser.row{
         {
           Operand: &parser.ConditionOperand{
             Operand: &parser.DocumentPath{
-              Fragment: []parser.PathFragment{
+              Fragment: []*parser.PathFragment{
                 {
                   Symbol: "UserId",
                 },

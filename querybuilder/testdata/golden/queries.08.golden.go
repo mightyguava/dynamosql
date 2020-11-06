@@ -13,7 +13,7 @@ querybuilder.item{
     Columns: []*parser.ProjectionColumn{
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "foo.bar",
             },
@@ -22,7 +22,7 @@ querybuilder.item{
       },
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "foo",
             },

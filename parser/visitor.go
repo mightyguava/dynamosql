@@ -113,7 +113,7 @@ func Visit(node Node, visitor func(node Node, next func() error) error) error {
 				return Visit(node.DocumentPath, visitor)
 			}
 			return Visit(node.Value, visitor)
-		case *Value, PathFragment:
+		case *Value, *PathFragment:
 			// Leaf nodes
 			return nil
 		default:

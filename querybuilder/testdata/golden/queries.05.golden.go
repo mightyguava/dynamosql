@@ -14,7 +14,7 @@ querybuilder.item{
     Columns: []*parser.ProjectionColumn{
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "UserId",
             },
@@ -23,7 +23,7 @@ querybuilder.item{
       },
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "TopScore",
             },
@@ -32,7 +32,7 @@ querybuilder.item{
       },
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "Scores",
               Indexes: []int{
@@ -44,7 +44,7 @@ querybuilder.item{
       },
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "Scores",
               Indexes: []int{
@@ -57,7 +57,7 @@ querybuilder.item{
       },
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "Studio",
             },
@@ -69,7 +69,7 @@ querybuilder.item{
       },
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "Studio",
             },
@@ -84,7 +84,7 @@ querybuilder.item{
       },
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "Studio",
             },

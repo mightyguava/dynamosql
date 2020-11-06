@@ -223,7 +223,7 @@ type Operand struct {
 func (o *Operand) node() {}
 
 type DocumentPath struct {
-	Fragment []PathFragment `@@ ( "." @@ )*`
+	Fragment []*PathFragment `@@ ( "." @@ )*`
 }
 
 func (p *DocumentPath) node() {}

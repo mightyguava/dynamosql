@@ -5,7 +5,7 @@ parser.row{
       Columns: []*parser.ProjectionColumn{
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "UserId",
               },
@@ -14,7 +14,7 @@ parser.row{
         },
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "TopScore",
               },
@@ -23,7 +23,7 @@ parser.row{
         },
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "Scores",
                 Indexes: []int{
@@ -35,7 +35,7 @@ parser.row{
         },
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "Scores",
                 Indexes: []int{
@@ -48,7 +48,7 @@ parser.row{
         },
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "Studio",
               },
@@ -60,7 +60,7 @@ parser.row{
         },
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "Studio",
               },
@@ -75,7 +75,7 @@ parser.row{
         },
         {
           DocumentPath: &parser.DocumentPath{
-            Fragment: []parser.PathFragment{
+            Fragment: []*parser.PathFragment{
               {
                 Symbol: "Studio",
               },
@@ -96,7 +96,7 @@ parser.row{
         {
           Operand: &parser.ConditionOperand{
             Operand: &parser.DocumentPath{
-              Fragment: []parser.PathFragment{
+              Fragment: []*parser.PathFragment{
                 {
                   Symbol: "UserId",
                 },

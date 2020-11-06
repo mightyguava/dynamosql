@@ -15,7 +15,7 @@ querybuilder.item{
     Columns: []*parser.ProjectionColumn{
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "title",
             },
@@ -24,7 +24,7 @@ querybuilder.item{
       },
       {
         DocumentPath: &parser.DocumentPath{
-          Fragment: []parser.PathFragment{
+          Fragment: []*parser.PathFragment{
             {
               Symbol: "year",
             },
