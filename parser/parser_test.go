@@ -18,7 +18,7 @@ import (
 func TestGoldenGoodQueries(t *testing.T) {
 	type row struct {
 		Query string
-		AST   Select
+		AST   AST
 	}
 
 	queries, err := os.Open("testdata/queries.sql")
@@ -27,7 +27,7 @@ func TestGoldenGoodQueries(t *testing.T) {
 	scanner := bufio.NewScanner(queries)
 	var parsed []row
 	for scanner.Scan() {
-		var ast Select
+		var ast AST
 		query := scanner.Text()
 		if strings.HasPrefix(query, "--") {
 			// skip comments
@@ -64,7 +64,7 @@ func TestGoldenBadQueries(t *testing.T) {
 	scanner := bufio.NewScanner(queries)
 	var parsed []row
 	for scanner.Scan() {
-		var ast Select
+		var ast AST
 		query := scanner.Text()
 		if strings.HasPrefix(query, "--") {
 			// skip comments

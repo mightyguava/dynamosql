@@ -20,7 +20,7 @@ var (
 		`|(?P<Operators><>|!=|<=|>=|[-+*/%:?,.()=<>\[\]])`,
 	))
 	Parser = participle.MustBuild(
-		&Select{},
+		&AST{},
 		participle.Lexer(Lexer),
 		participle.Unquote("String"),
 		UnquoteIdent(),
@@ -56,9 +56,13 @@ type Node interface {
 	node()
 }
 
+type AST struct {
+	Select *Select `"SELECT" @@`
+}
+
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
-	Projection *ProjectionExpression `"SELECT" @@`
+	Projection *ProjectionExpression `@@`
 	From       string                `"FROM" @Ident ( @"." @Ident )*`
 	Index      *string               `( "USE" "INDEX" "(" @Ident ")" )?`
 	Where      *AndExpression        `( "WHERE" @@ )?`

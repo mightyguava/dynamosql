@@ -33,15 +33,16 @@ type PreparedQuery struct {
 }
 
 func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string) (*PreparedQuery, error) {
-	var ast parser.Select
+	var ast parser.AST
 	if err := parser.Parser.ParseString(query, &ast); err != nil {
 		return nil, err
 	}
-	table, err := tables.Get(ctx, ast.From)
+	sel := ast.Select
+	table, err := tables.Get(ctx, sel.From)
 	if err != nil {
 		return nil, err
 	}
-	return prepare(table, ast)
+	return prepare(table, sel)
 }
 
 func (pq *PreparedQuery) NewRequest(args []driver.NamedValue) (*dynamodb.QueryInput, error) {
@@ -142,7 +143,7 @@ func (p NamedParams) Clone() NamedParams {
 	return copy
 }
 
-func prepare(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
+func prepare(table *schema.Table, ast *parser.Select) (*PreparedQuery, error) {
 	index := ""
 	if ast.Index != nil {
 		index = *ast.Index
