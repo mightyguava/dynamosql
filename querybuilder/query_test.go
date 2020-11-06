@@ -63,6 +63,7 @@ func TestBuildQuery(t *testing.T) {
 		goldie.WithFixtureDir("testdata/golden"),
 		goldie.WithNameSuffix(".golden.go"))
 	for i, q := range parsed {
+		t.Log("Query: ", q.Query)
 		g.Assert(t, fmt.Sprintf("queries.%02d", i), []byte(testutil.Repr(q)))
 	}
 }

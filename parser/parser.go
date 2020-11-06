@@ -51,6 +51,11 @@ func (b *ScanDescending) Capture(values []string) error {
 	return nil
 }
 
+// Node is an interface implemented by all AST nodes.
+type Node interface {
+	node()
+}
+
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
 	Projection *ProjectionExpression `"SELECT" @@`
@@ -61,10 +66,14 @@ type Select struct {
 	Limit      *int                  `( "LIMIT" @Number )?`
 }
 
+func (e *Select) node() {}
+
 type ProjectionExpression struct {
 	All     bool                `  ( @"*" | "document" "(" @"*" ")" )`
 	Columns []*ProjectionColumn `| @@ ( "," @@ )*`
 }
+
+func (e *ProjectionExpression) node() {}
 
 func (e ProjectionExpression) String() string {
 	if e.All {
@@ -84,6 +93,8 @@ type ProjectionColumn struct {
 	DocumentPath *DocumentPath       `| @@`
 }
 
+func (c *ProjectionColumn) node() {}
+
 func (c ProjectionColumn) String() string {
 	if c.DocumentPath != nil {
 		return c.DocumentPath.String()
@@ -98,13 +109,19 @@ type ConditionExpression struct {
 	Or []*AndExpression `@@ ( "OR" @@ )*`
 }
 
+func (e *ConditionExpression) node() {}
+
 type AndExpression struct {
 	And []*Condition `@@ ( "AND" @@ )*`
 }
 
+func (e *AndExpression) node() {}
+
 type ParenthesizedExpression struct {
 	ConditionExpression *ConditionExpression `@@`
 }
+
+func (e *ParenthesizedExpression) node() {}
 
 type Condition struct {
 	Parenthesized *ParenthesizedExpression `  "(" @@ ")"`
@@ -113,14 +130,20 @@ type Condition struct {
 	Function      *FunctionExpression      `| @@`
 }
 
+func (e *Condition) node() {}
+
 type NotCondition struct {
 	Condition *Condition `@@`
 }
+
+func (e *NotCondition) node() {}
 
 type FunctionExpression struct {
 	Function string              `@Ident`
 	Args     []*FunctionArgument `"(" @@ ( "," @@ )* ")"`
 }
+
+func (f *FunctionExpression) node() {}
 
 func (f *FunctionExpression) FirstArgIsRef() bool {
 	return len(f.Args) > 0 && f.Args[0].DocumentPath != nil
@@ -145,6 +168,8 @@ type FunctionArgument struct {
 	Value        *Value        `| @@`
 }
 
+func (a *FunctionArgument) node() {}
+
 func (a FunctionArgument) String() string {
 	if a.DocumentPath != nil {
 		return a.DocumentPath.String()
@@ -160,34 +185,48 @@ type ConditionOperand struct {
 	ConditionRHS *ConditionRHS `@@`
 }
 
+func (c *ConditionOperand) node() {}
+
 type ConditionRHS struct {
 	Compare *Compare `  @@`
 	Between *Between `| "BETWEEN" @@`
 	In      *In      `| "IN" "(" @@ ")"`
 }
 
+func (c *ConditionRHS) node() {}
+
 type In struct {
-	Values []Value `@@ ( "," @@ )*`
+	Values []*Value `@@ ( "," @@ )*`
 }
+
+func (i *In) node() {}
 
 type Compare struct {
 	Operator string   `@( "<>" | "<=" | ">=" | "=" | "<" | ">" | "!=" )`
 	Operand  *Operand `@@`
 }
 
+func (c *Compare) node() {}
+
 type Between struct {
 	Start *Operand `@@`
 	End   *Operand `"AND" @@`
 }
+
+func (b *Between) node() {}
 
 type Operand struct {
 	Value     *Value        `  @@`
 	SymbolRef *DocumentPath `| @@`
 }
 
+func (o *Operand) node() {}
+
 type DocumentPath struct {
 	Fragment []PathFragment `@@ ( "." @@ )*`
 }
+
+func (p *DocumentPath) node() {}
 
 // String marshals the DocumentPath into a human readable format. Do not use this function when marshaling
 // to expressions, because substitutions need to be applied first for reserved words.
@@ -205,6 +244,8 @@ type PathFragment struct {
 	Symbol  string `( @Ident | @QuotedIdent )`
 	Indexes []int  `( "[" @Number "]" )*`
 }
+
+func (p PathFragment) node() {}
 
 func (p PathFragment) String() string {
 	if len(p.Indexes) == 0 {
@@ -228,6 +269,8 @@ type Value struct {
 	Boolean               *Boolean `| @("TRUE" | "FALSE")`
 	Null                  bool     `| @"NULL"`
 }
+
+func (v *Value) node() {}
 
 func (v Value) Literal() string {
 	switch {

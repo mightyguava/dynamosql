@@ -151,6 +151,9 @@ func prepare(table *schema.Table, ast parser.Select) (*PreparedQuery, error) {
 		}
 	}
 	ctx := NewContext(table, index)
+	if err := prepareValuesAndPlaceholders(ctx, ast.Where); err != nil {
+		return nil, err
+	}
 	visit := &visitor{Context: ctx}
 	kf := extractKeyExpressions(ast.Where, ctx.IsKey)
 	keyExpr, err := buildKeyExpression(ctx, kf.Key)
@@ -283,6 +286,46 @@ func (c *Context) substitute(symbol string) string {
 		return sub
 	}
 	return symbol
+}
+
+func prepareValuesAndPlaceholders(ctx *Context, expr *parser.AndExpression) error {
+	if expr == nil {
+		return nil
+	}
+	return parser.Visit(expr, func(node parser.Node, next func() error) error {
+		if node, ok := node.(*parser.Value); ok {
+			var replace parser.Value
+			switch {
+			case node.PlaceHolder != nil:
+				ctx.NamedParams[*node.PlaceHolder] = Empty{}
+				replace = *node
+			case node.PositionalPlaceholder != nil:
+				num, str := ctx.NextPositionalParam()
+				ctx.PositionalParams[num] = str
+				replace = parser.Value{PlaceHolder: &str}
+			case node.Number != nil:
+				name := ctx.NextGeneratedParam()
+				ctx.FixedParams[name] = *node.Number
+				replace = parser.Value{PlaceHolder: &name}
+			case node.String != nil:
+				name := ctx.NextGeneratedParam()
+				ctx.FixedParams[name] = *node.String
+				replace = parser.Value{PlaceHolder: &name}
+			case node.Boolean != nil:
+				name := ctx.NextGeneratedParam()
+				ctx.FixedParams[name] = bool(*node.Boolean)
+				replace = parser.Value{PlaceHolder: &name}
+			case node.Null:
+				name := ctx.NextGeneratedParam()
+				ctx.FixedParams[name] = nil
+				replace = parser.Value{PlaceHolder: &name}
+			default:
+				panic("invalid value" + repr.String(node))
+			}
+			*node = replace
+		}
+		return next()
+	})
 }
 
 // matches an identifier that is valid for use in an expression
@@ -483,33 +526,10 @@ func (v *visitor) VisitSimpleExpression(n interface{}) string {
 		}
 		return v.VisitSimpleExpression(node.Value)
 	case *parser.Value:
-		switch {
-		case node.PlaceHolder != nil:
-			v.Context.NamedParams[*node.PlaceHolder] = Empty{}
+		if node.PlaceHolder != nil {
 			return *node.PlaceHolder
-		case node.PositionalPlaceholder != nil:
-			num, str := v.Context.NextPositionalParam()
-			v.Context.PositionalParams[num] = str
-			return str
-		case node.Number != nil:
-			name := v.Context.NextGeneratedParam()
-			v.Context.FixedParams[name] = *node.Number
-			return name
-		case node.String != nil:
-			name := v.Context.NextGeneratedParam()
-			v.Context.FixedParams[name] = *node.String
-			return name
-		case node.Boolean != nil:
-			name := v.Context.NextGeneratedParam()
-			v.Context.FixedParams[name] = bool(*node.Boolean)
-			return name
-		case node.Null:
-			name := v.Context.NextGeneratedParam()
-			v.Context.FixedParams[name] = nil
-			return name
-		default:
-			panic("invalid value" + repr.String(node))
 		}
+		panic("invalid state: attempted to marshal literal value in expression")
 	default:
 		panic("visitor does not recognize type " + reflect.TypeOf(node).String())
 	}

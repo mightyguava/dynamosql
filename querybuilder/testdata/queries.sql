@@ -17,3 +17,6 @@ SELECT * FROM gamescores USE INDEX (GameTitleIndex) WHERE GameTitle = :title AND
 SELECT * FROM gamescores WHERE UserId = "103" DESC LIMIT 1
 -- positional placeholders (?)
 SELECT * FROM gamescores WHERE UserId = ? AND TopScore > ?
+-- positional placeholders (?) when key expression appears after filter expression
+-- https://github.com/mightyguava/dynamosql/issues/1
+SELECT * FROM gamescores WHERE TopScore > ? AND UserId = ?
