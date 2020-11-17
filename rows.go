@@ -2,17 +2,20 @@ package dynamosql
 
 import (
 	"database/sql/driver"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 
 	"github.com/mightyguava/dynamosql/parser"
 )
 
 type rows struct {
-	resp     *dynamodb.QueryOutput
-	nextPage func(lastEvaluatedKey map[string]*dynamodb.AttributeValue) (*dynamodb.QueryOutput, error)
-	cols     []*parser.ProjectionColumn
+	resp        *dynamodb.QueryOutput
+	nextPage    func(lastEvaluatedKey map[string]*dynamodb.AttributeValue) (*dynamodb.QueryOutput, error)
+	cols        []*parser.ProjectionColumn
+	mapToGoType bool
 
 	nextRow int
 }
@@ -56,18 +59,42 @@ func (r *rows) Next(dest []driver.Value) error {
 
 	// SELECT *
 	if len(r.cols) == 0 {
-		dest[0] = row
+		dest[0] = r.remap(row)
 	}
 
 	for i, col := range r.cols {
 		if col.Function != nil {
 			// SELECT document(...) returns the whole document
-			dest[i] = row
+			dest[i] = r.remap(row)
 		} else {
-			dest[i] = pluck(&dynamodb.AttributeValue{M: row}, col.DocumentPath)
+			dest[i] = r.remap(pluck(&dynamodb.AttributeValue{M: row}, col.DocumentPath))
 		}
 	}
 	return nil
+}
+
+func (r *rows) remap(data interface{}) interface{} {
+	if !r.mapToGoType {
+		return data
+	}
+	switch data := data.(type) {
+	case []*dynamodb.AttributeValue:
+		out := make([]interface{}, len(data))
+		err := dynamodbattribute.UnmarshalList(data, &out)
+		if err != nil {
+			panic(fmt.Sprintf("unexpected conversion error: %+v", err))
+		}
+		return out
+	case map[string]*dynamodb.AttributeValue:
+		out := make(map[string]interface{}, len(data))
+		err := dynamodbattribute.UnmarshalMap(data, &out)
+		if err != nil {
+			panic(fmt.Sprintf("unexpected conversion error: %+v", err))
+		}
+		return out
+	default:
+		return data
+	}
 }
 
 func pluck(pos *dynamodb.AttributeValue, path *parser.DocumentPath) driver.Value {

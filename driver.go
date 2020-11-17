@@ -30,6 +30,9 @@ type Config struct {
 	DynamoDB dynamodbiface.DynamoDBAPI
 	// If set, and DynamoDB is not set, the driver will try to create a DynamoDB client using this session.
 	Session *session.Session
+	// If set, the wrapper collections []*dynamodb.AttributeValue, map[string]*dynamodb.AttributeValue will be mapped
+	// unmarshaled into using the dynamodbattribute package into []interface{} and map[string]interface{}, respectively.
+	AlwaysConvertCollectionsToGoType bool
 }
 
 // New creates a Driver instance using a custom config. This may be easier to use than via sql.Open.
@@ -88,22 +91,24 @@ func (d *Driver) OpenConnector(connStr string) (driver.Connector, error) {
 		dynamo = dynamodb.New(sess)
 	}
 	return &connector{
-		dynamo: dynamo,
-		driver: d,
-		tables: schema.NewTableLoader(dynamo),
+		dynamo:      dynamo,
+		driver:      d,
+		tables:      schema.NewTableLoader(dynamo),
+		mapToGoType: d.cfg.AlwaysConvertCollectionsToGoType,
 	}, nil
 }
 
 type connector struct {
-	driver *Driver
-	dynamo dynamodbiface.DynamoDBAPI
-	tables *schema.TableLoader
+	driver      *Driver
+	dynamo      dynamodbiface.DynamoDBAPI
+	tables      *schema.TableLoader
+	mapToGoType bool
 }
 
 var _ driver.Connector = &connector{}
 
 func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
-	return &conn{dynamo: c.dynamo, tables: c.tables}, nil
+	return &conn{dynamo: c.dynamo, tables: c.tables, mapToGoType: c.mapToGoType}, nil
 }
 
 func (c *connector) Driver() driver.Driver {

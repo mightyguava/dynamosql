@@ -17,7 +17,8 @@ var (
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Operators><>|!=|<=|>=|[-+*/%:?,.()=<>\[\]])`,
+		`|(?P<Operators><>|!=|<=|>=|[-+*/%:?,.()=<>\[\]])` +
+		`|;`,
 	))
 	Parser = participle.MustBuild(
 		&AST{},
@@ -58,6 +59,7 @@ type Node interface {
 
 type AST struct {
 	Select *Select `"SELECT" @@`
+	End    string  `( ";" )?`
 }
 
 // Select based on http://www.h2database.com/html/grammar.html

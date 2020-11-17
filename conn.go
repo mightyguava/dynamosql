@@ -13,8 +13,9 @@ import (
 )
 
 type conn struct {
-	dynamo dynamodbiface.DynamoDBAPI
-	tables *schema.TableLoader
+	dynamo      dynamodbiface.DynamoDBAPI
+	tables      *schema.TableLoader
+	mapToGoType bool
 }
 
 var (
@@ -74,8 +75,9 @@ func (c conn) QueryContext(ctx context.Context, query string, args []driver.Name
 			}
 			return nil, io.EOF
 		},
-		cols: q.Columns,
-		resp: resp,
+		cols:        q.Columns,
+		resp:        resp,
+		mapToGoType: c.mapToGoType,
 	}, nil
 }
 
