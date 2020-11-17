@@ -78,6 +78,7 @@ func (c conn) QueryContext(ctx context.Context, query string, args []driver.Name
 		cols:        q.Columns,
 		resp:        resp,
 		mapToGoType: c.mapToGoType,
+		limit:       q.Limit,
 	}, nil
 }
 

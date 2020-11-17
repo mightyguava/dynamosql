@@ -2,6 +2,8 @@ package dynamosql
 
 import (
 	"database/sql/driver"
+	"io"
+	"strconv"
 	"testing"
 
 	"github.com/alecthomas/participle"
@@ -11,6 +13,50 @@ import (
 
 	"github.com/mightyguava/dynamosql/parser"
 )
+
+func TestRows_PaginatesAndAppliesLimit(t *testing.T) {
+	next := 0
+	nextPage := func(lastEvaluatedKey map[string]*dynamodb.AttributeValue) (*dynamodb.QueryOutput, error) {
+		a := next
+		next++
+		b := next
+		next++
+		return &dynamodb.QueryOutput{
+			Items: []map[string]*dynamodb.AttributeValue{
+				{
+					"id": {
+						N: aws.String(strconv.Itoa(a)),
+					},
+				},
+				{
+					"id": {
+						N: aws.String(strconv.Itoa(b)),
+					},
+				},
+			},
+			LastEvaluatedKey: lastEvaluatedKey,
+		}, nil
+	}
+	resp1, _ := nextPage(nil)
+	r := &rows{
+		resp:        resp1,
+		nextPage:    nextPage,
+		cols:        []*parser.ProjectionColumn{{DocumentPath: &parser.DocumentPath{Fragment: []*parser.PathFragment{{Symbol: "id"}}}}},
+		mapToGoType: false,
+		limit:       7,
+	}
+	var err error
+	row := make([]driver.Value, 1)
+	count := 0
+	for {
+		if err = r.Next(row); err != nil {
+			break
+		}
+		count++
+	}
+	require.Equal(t, err, io.EOF)
+	require.Equal(t, count, 7)
+}
 
 func TestPluck(t *testing.T) {
 	projectionParser := participle.MustBuild(

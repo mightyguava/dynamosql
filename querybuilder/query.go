@@ -26,6 +26,7 @@ var (
 
 type PreparedQuery struct {
 	Query            *dynamodb.QueryInput
+	Limit            int
 	Columns          []*parser.ProjectionColumn
 	NamedParams      NamedParams
 	PositionalParams map[int]string
@@ -191,14 +192,18 @@ func prepare(table *schema.Table, ast *parser.Select) (*PreparedQuery, error) {
 	if index != "" {
 		req.IndexName = aws.String(index)
 	}
-	if ast.Limit != nil {
+	limit := 0
+	if ast.Limit != nil && filterExpr == "" {
+		// Only apply the limit if there is no filter, since DynamoDB applies limits BEFORE the filter.
 		req.Limit = aws.Int64(int64(*ast.Limit))
+		limit = *ast.Limit
 	}
 	if ast.Descending != nil {
 		req.ScanIndexForward = aws.Bool(!bool(*ast.Descending))
 	}
 	return &PreparedQuery{
 		Query:            req,
+		Limit:            limit,
 		Columns:          ast.Projection.Columns,
 		NamedParams:      visit.Context.NamedParams,
 		PositionalParams: visit.Context.PositionalParams,

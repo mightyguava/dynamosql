@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -12,8 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/xo/usql/drivers"
 	"github.com/xo/usql/env"
 	"github.com/xo/usql/handler"
@@ -103,27 +99,7 @@ func run(args *Args, u *user.User) error {
 	}
 	driver := dynamosql.New(dynamosql.Config{Session: sess, AlwaysConvertCollectionsToGoType: true})
 	sql.Register("dynamosql", driver)
-	drivers.Register("dynamosql", drivers.Driver{
-		ConvertDefault: func(in interface{}) (string, error) {
-			switch in := in.(type) {
-			case map[string]*dynamodb.AttributeValue:
-				out := make(map[string]interface{})
-				if err := dynamodbattribute.UnmarshalMap(in, &out); err != nil {
-					return "", err
-				}
-				buf := &bytes.Buffer{}
-				enc := json.NewEncoder(buf)
-				enc.SetIndent("", "  ")
-				enc.SetEscapeHTML(false)
-				if err := enc.Encode(out); err != nil {
-					return "", err
-				}
-				return buf.String(), nil
-			default:
-				return fmt.Sprintf("%#v", in), nil
-			}
-		},
-	})
+	drivers.Register("dynamosql", drivers.Driver{})
 	if err = h.Open("dynamosql", ""); err != nil {
 		return err
 	}

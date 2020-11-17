@@ -3,6 +3,7 @@ package dynamosql
 import (
 	"database/sql/driver"
 	"fmt"
+	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -16,8 +17,10 @@ type rows struct {
 	nextPage    func(lastEvaluatedKey map[string]*dynamodb.AttributeValue) (*dynamodb.QueryOutput, error)
 	cols        []*parser.ProjectionColumn
 	mapToGoType bool
+	limit       int
 
 	nextRow int
+	count   int
 }
 
 var _ driver.Rows = &rows{}
@@ -46,6 +49,9 @@ func (r *rows) Close() error {
 }
 
 func (r *rows) Next(dest []driver.Value) error {
+	if r.limit > 0 && r.count >= r.limit {
+		return io.EOF
+	}
 	if r.nextRow >= len(r.resp.Items) {
 		resp, err := r.nextPage(r.resp.LastEvaluatedKey)
 		if err != nil {
@@ -56,6 +62,7 @@ func (r *rows) Next(dest []driver.Value) error {
 	}
 	row := r.resp.Items[r.nextRow]
 	r.nextRow++
+	r.count++
 
 	// SELECT *
 	if len(r.cols) == 0 {

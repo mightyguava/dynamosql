@@ -91,9 +91,6 @@ func NewArgs() *Args {
 	kingpin.Flag("region", "The AWS region to use. Overrides config/env settings.").StringVar(&args.AWSRegion)
 	kingpin.Flag("endpoint-url", "The AWS endpoint URL to use, e.g. for pointing to a local dynamodb instance").StringVar(&args.AWSEndpointURL)
 
-	// set usage template
-	kingpin.UsageTemplate(text.UsageTemplate())
-
 	// command / file flags
 	kingpin.Flag("command", "run only single command (SQL or internal) and exit").Short('c').SetValue(commandOrFile{args, true})
 	kingpin.Flag("file", "execute commands from file and exit").Short('f').SetValue(commandOrFile{args, false})

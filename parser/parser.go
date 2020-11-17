@@ -65,7 +65,7 @@ type AST struct {
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
 	Projection *ProjectionExpression `@@`
-	From       string                `"FROM" @Ident ( @"." @Ident )*`
+	From       string                `"FROM" ( @Ident ( @"." @Ident )* | @QuotedIdent )`
 	Index      *string               `( "USE" "INDEX" "(" @Ident ")" )?`
 	Where      *AndExpression        `( "WHERE" @@ )?`
 	Descending *ScanDescending       `( @"ASC" | @"DESC" )?`

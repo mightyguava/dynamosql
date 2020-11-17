@@ -8,6 +8,7 @@ querybuilder.item{
       ScanIndexForward: &false,
       TableName: &"gamescores",
     },
+    Limit: 1,
     NamedParams: querybuilder.NamedParams{    },
     PositionalParams: map[int]string{    },
     FixedParams: map[string]interface {}{
