@@ -20,6 +20,7 @@ import (
 )
 
 func main() {
+	text.CommandName = "dynamosql"
 	var err error
 
 	// load current user
