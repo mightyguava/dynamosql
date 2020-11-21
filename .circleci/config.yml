@@ -1,0 +1,57 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2.1
+parameters:
+  go-version:
+    type: string
+    default: "1.14"
+  golangci-lint-version:
+    type: string
+    default: "v1.32.2"
+
+workflows:
+  main:
+    jobs:
+      - build
+      - release:
+          # Only run this job on git tag pushes
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:<< pipeline.parameters.go-version >>
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: circleci/dynamodb:latest
+
+    steps:
+      - checkout
+      - run:
+          name: Prepare
+          command: |
+            curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s << pipeline.parameters.golangci-lint-version >>
+            mkdir ~/report
+          when: always
+      - run:
+          name: Test
+          command: go test -p 1 -v ./...
+      - run:
+          name: Lint
+          command: |
+            go build ./...
+            ./bin/golangci-lint run
+  release:
+    docker:
+      - image: circleci/golang:1.14
+    steps:
+      - checkout
+      - run: |
+          cd cmd/dynamosql
+          curl -sL https://git.io/goreleaser | bash
