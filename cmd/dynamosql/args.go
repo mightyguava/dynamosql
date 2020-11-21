@@ -9,6 +9,13 @@ import (
 	"github.com/xo/usql/text"
 )
 
+var (
+	// Populated by goreleaser
+	version = "?"
+	commit  = "?"
+	date    = "?"
+)
+
 // CommandOrFile is a special type to deal with interspersed -c, -f,
 // command-line options, to ensure proper order execution.
 type CommandOrFile struct {
@@ -144,7 +151,7 @@ func NewArgs() *Args {
 
 	// add --version flag
 	kingpin.Flag("version", "display version and exit").PreAction(func(*kingpin.ParseContext) error {
-		fmt.Fprintln(os.Stdout, text.CommandName, text.CommandVersion)
+		fmt.Fprintln(os.Stdout, text.CommandName, version, commit, date)
 		os.Exit(0)
 		return nil
 	}).Short('V').Bool()

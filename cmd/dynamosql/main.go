@@ -100,7 +100,11 @@ func run(args *Args, u *user.User) error {
 	}
 	driver := dynamosql.New(dynamosql.Config{Session: sess, AlwaysConvertCollectionsToGoType: true})
 	sql.Register("dynamosql", driver)
-	drivers.Register("dynamosql", drivers.Driver{})
+	drivers.Register("dynamosql", drivers.Driver{
+		Version: func(db drivers.DB) (string, error) {
+			return version, nil
+		},
+	})
 	if err = h.Open("dynamosql", ""); err != nil {
 		return err
 	}
