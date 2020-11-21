@@ -1,0 +1,28 @@
+project_name: dynamosql
+release:
+  github:
+    owner: dynamosql
+    name: dynamosql
+brews:
+  - install: bin.install "chroma"
+env:
+  - CGO_ENABLED=0
+builds:
+  - goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+    main: ./cmd/dynamosql
+    ldflags: -s -w -X #main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    binary: dynamosql
+archives:
+  - format: tar.gz
+    name_template: '{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}'
+    files:
+      - COPYING
+      - README*
+snapshot:
+  name_template: SNAPSHOT-{{ .Commit }}
+checksum:
+  name_template: '{{ .ProjectName }}-{{ .Version }}-checksums.txt'

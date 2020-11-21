@@ -11,10 +11,9 @@ parameters:
     default: "v1.32.2"
 
 workflows:
-  test_and_lint:
+  main:
     jobs:
       - build
-      - lint
       - release:
           # Only run this job on git tag pushes
           filters:
