@@ -41,7 +41,9 @@ parser.row{
                   Operator: "=",
                   Operand: &parser.Operand{
                     Value: &parser.Value{
-                      String: &"The Dark Knight",
+                      Scalar: parser.Scalar{
+                        Str: &"The Dark Knight",
+                      },
                     },
                   },
                 },

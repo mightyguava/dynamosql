@@ -30,6 +30,9 @@ func PrepareInsert(ctx context.Context, tables *schema.TableLoader, query string
 		return nil, err
 	}
 	ins := ast.Insert
+	if ins == nil {
+		return nil, fmt.Errorf("expected INSERT but got %s", repr.String(ast))
+	}
 	table, err := tables.Get(ctx, ins.Into)
 	if err != nil {
 		return nil, err
@@ -37,16 +40,17 @@ func PrepareInsert(ctx context.Context, tables *schema.TableLoader, query string
 	var literals []string
 	var usePlaceholder bool
 	var placeholder string
-	for _, r := range ins.Values {
-		v := r.Value
+	for _, v := range ins.Values {
 		switch {
-		case v.PositionalPlaceholder != nil:
+		case v.PositionalPlaceholder:
 			usePlaceholder = true
 		case v.PlaceHolder != nil:
 			usePlaceholder = true
 			placeholder = *v.PlaceHolder
-		case v.String != nil:
-			literals = append(literals, *v.String)
+		case v.Object != nil:
+			literals = append(literals, v.Object.String())
+		case v.Str != nil:
+			literals = append(literals, *v.Str)
 		default:
 			return nil, fmt.Errorf("VALUES expression may must be a placeholder or string, but was %s", repr.String(v))
 		}

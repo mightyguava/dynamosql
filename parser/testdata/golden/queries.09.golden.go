@@ -22,6 +22,8 @@ parser.row{
                   Operator: "=",
                   Operand: &parser.Operand{
                     Value: &parser.Value{
+                      Scalar: parser.Scalar{
+                      },
                       PlaceHolder: &":title",
                     },
                   },
@@ -44,7 +46,9 @@ parser.row{
                 },
                 {
                   Value: &parser.Value{
-                    String: &"Will",
+                    Scalar: parser.Scalar{
+                      Str: &"Will",
+                    },
                   },
                 },
               },

@@ -22,7 +22,9 @@ parser.row{
                   Operator: "=",
                   Operand: &parser.Operand{
                     Value: &parser.Value{
-                      Boolean: &parser.Boolean(true),
+                      Scalar: parser.Scalar{
+                        Boolean: &parser.Boolean(true),
+                      },
                     },
                   },
                 },

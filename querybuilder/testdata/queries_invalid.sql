@@ -22,3 +22,5 @@ SELECT * FROM gamescores WHERE UserId = :UserId AND GameTitle = "A" AND GameTitl
 SELECT * FROM gamescores WHERE UserId = :UserId AND attribute_exists(GameTitle)
 -- Mix ? and : placeholders
 SELECT * FROM gamescores WHERE UserId = :UserId AND Wins = ?
+-- Use JSON in query
+SELECT * FROM gamescores WHERE UserId = {id: 10}

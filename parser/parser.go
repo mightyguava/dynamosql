@@ -81,12 +81,13 @@ type Select struct {
 }
 
 type Insert struct {
-	Into   string      `"INTO" ( @Ident ( @"." @Ident )* | @QuotedIdent )`
-	Values []*ValueRow `"VALUES" @@ ( "," @@ )* `
+	Into   string            `"INTO" ( @Ident ( @"." @Ident )* | @QuotedIdent )`
+	Values []*InsertTerminal `"VALUES" "(" @@ ")" ( "," "(" @@ ")" )* `
 }
 
-type ValueRow struct {
-	Value *Value `"(" @@ ")"`
+type InsertTerminal struct {
+	Value
+	Object *JSONObject `| @@`
 }
 
 func (e *Select) node() {}
@@ -198,7 +199,7 @@ func (a FunctionArgument) String() string {
 		return a.DocumentPath.String()
 	}
 	if a.Value != nil {
-		return a.Value.Literal()
+		return a.Value.String()
 	}
 	return ""
 }
@@ -284,65 +285,85 @@ func (p PathFragment) String() string {
 	return buf.String()
 }
 
-type ObjectEntry struct {
-	Key   string `@(Ident | String)`
-	Value *Value `":" @@`
+type JSONObjectEntry struct {
+	Key   string     `@(Ident | String)`
+	Value *JSONValue `":" @@`
 }
 
-type Object struct {
-	Entries []*ObjectEntry `"{" (@@ ("," @@)* ","?)? "}"`
+func (j *JSONObjectEntry) node() {}
+
+type JSONObject struct {
+	Entries []*JSONObjectEntry `"{" (@@ ("," @@)* ","?)? "}"`
 }
 
-func (a *Object) Literal() string {
+func (j *JSONObject) node() {}
+
+func (a *JSONObject) String() string {
 	out := make([]string, 0, len(a.Entries))
 	for _, entry := range a.Entries {
-		out = append(out, strconv.Quote(entry.Key)+":"+entry.Value.Literal())
+		out = append(out, strconv.Quote(entry.Key)+":"+entry.Value.String())
 	}
 	return "{" + strings.Join(out, ",") + "}"
 }
 
-type Array struct {
-	Entries []*Value `"[" (@@ ("," @@)* ","?)? "]"`
+type JSONArray struct {
+	Entries []*JSONValue `"[" (@@ ("," @@)* ","?)? "]"`
 }
 
-func (a *Array) Literal() string {
+func (j *JSONArray) node() {}
+
+func (a *JSONArray) String() string {
 	out := make([]string, 0, len(a.Entries))
 	for _, v := range a.Entries {
-		out = append(out, v.Literal())
+		out = append(out, v.String())
 	}
 	return "[" + strings.Join(out, ",") + "]"
 }
 
+type JSONValue struct {
+	Scalar
+	Object *JSONObject `| @@`
+	Array  *JSONArray  `| @@`
+}
+
+type Scalar struct {
+	Number  *float64 `  @Number`
+	Str     *string  `| @String`
+	Boolean *Boolean `| @("TRUE" | "FALSE")`
+	Null    bool     `| @"NULL"`
+}
+
+func (l *Scalar) node() {}
+func (l *Scalar) String() string {
+	switch {
+	case l.Number != nil:
+		return strconv.FormatFloat(*l.Number, 'g', -1, 64)
+	case l.Str != nil:
+		return strconv.Quote(*l.Str)
+	case l.Boolean != nil:
+		return strconv.FormatBool(bool(*l.Boolean))
+	case l.Null:
+		return "NULL"
+	default:
+		panic("unexpected code path")
+	}
+}
+
 type Value struct {
-	PlaceHolder           *string  `  @":" @Ident `
-	PositionalPlaceholder *bool    `| @"?" `
-	Number                *float64 `| @Number`
-	String                *string  `| @String`
-	Boolean               *Boolean `| @("TRUE" | "FALSE")`
-	Null                  bool     `| @"NULL"`
-	Object                *Object  `| @@`
-	Array                 *Array   `| @@`
+	Scalar
+	PlaceHolder           *string `| @":" @Ident `
+	PositionalPlaceholder bool    `| @"?" `
 }
 
 func (v *Value) node() {}
 
-func (v Value) Literal() string {
+func (v Value) String() string {
 	switch {
 	case v.PlaceHolder != nil:
 		return *v.PlaceHolder
-	case v.Number != nil:
-		return strconv.FormatFloat(*v.Number, 'g', -1, 64)
-	case v.String != nil:
-		return *v.String
-	case v.Boolean != nil:
-		return strconv.FormatBool(bool(*v.Boolean))
-	case v.Null:
-		return "NULL"
-	case v.Object != nil:
-		return v.Object.Literal()
-	case v.Array != nil:
-		return v.Array.Literal()
+	case v.PositionalPlaceholder:
+		return "?"
 	default:
-		panic("unexpected code path")
+		return v.Scalar.String()
 	}
 }

@@ -164,6 +164,7 @@ func TestInsertAndQuery(t *testing.T) {
 	rushHour := fixtures.Movie{"Rush Hour", 1998, fixtures.MovieInfo{}}
 	forrestGump := fixtures.Movie{"Forrest Gump", 1994, fixtures.MovieInfo{}}
 	inception := fixtures.Movie{"Inception", 2010, fixtures.MovieInfo{}}
+	dieHard := fixtures.Movie{"Die Hard", 1988, fixtures.MovieInfo{}}
 
 	v, err := db.Exec("INSERT INTO movies VALUES (?)", []fixtures.Movie{
 		prisoners, rushHour,
@@ -184,11 +185,16 @@ INSERT INTO movies VALUES
 ('{"title":"Inception", "year": 2010}')
 `)
 	require.NoError(t, err)
+	v, err = db.Exec(`
+INSERT INTO movies VALUES
+({title:"Die Hard", year:1988})
+`)
+	require.NoError(t, err)
 	rows, err = v.RowsAffected()
 	require.NoError(t, err)
 	require.Equal(t, int64(1), rows)
 
-	for _, m := range []fixtures.Movie{prisoners, rushHour, forrestGump, inception} {
+	for _, m := range []fixtures.Movie{prisoners, rushHour, forrestGump, inception, dieHard} {
 		row := db.QueryRow(`SELECT * FROM movies WHERE title = ?`, m.Title)
 		var movie fixtures.Movie
 		require.NoError(t, row.Scan(Document(&movie)))

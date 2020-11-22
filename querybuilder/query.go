@@ -39,6 +39,9 @@ func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string)
 		return nil, err
 	}
 	sel := ast.Select
+	if sel == nil {
+		return nil, fmt.Errorf("expected SELECT but got %s", repr.String(ast))
+	}
 	table, err := tables.Get(ctx, sel.From)
 	if err != nil {
 		return nil, err
@@ -155,10 +158,10 @@ func prepare(table *schema.Table, ast *parser.Select) (*PreparedQuery, error) {
 		}
 	}
 	ctx := NewContext(table, index)
+	visit := &visitor{Context: ctx}
 	if err := prepareValuesAndPlaceholders(ctx, ast.Where); err != nil {
 		return nil, err
 	}
-	visit := &visitor{Context: ctx}
 	kf := extractKeyExpressions(ast.Where, ctx.IsKey)
 	keyExpr, err := buildKeyExpression(ctx, kf.Key)
 	if err != nil {
@@ -312,7 +315,7 @@ func prepareValuesAndPlaceholders(ctx *Context, expr *parser.AndExpression) erro
 			case node.PlaceHolder != nil:
 				ctx.NamedParams[*node.PlaceHolder] = Empty{}
 				replace = *node
-			case node.PositionalPlaceholder != nil:
+			case node.PositionalPlaceholder:
 				num, str := ctx.NextPositionalParam()
 				ctx.PositionalParams[num] = str
 				replace = parser.Value{PlaceHolder: &str}
@@ -320,9 +323,9 @@ func prepareValuesAndPlaceholders(ctx *Context, expr *parser.AndExpression) erro
 				name := ctx.NextGeneratedParam()
 				ctx.FixedParams[name] = *node.Number
 				replace = parser.Value{PlaceHolder: &name}
-			case node.String != nil:
+			case node.Str != nil:
 				name := ctx.NextGeneratedParam()
-				ctx.FixedParams[name] = *node.String
+				ctx.FixedParams[name] = *node.Str
 				replace = parser.Value{PlaceHolder: &name}
 			case node.Boolean != nil:
 				name := ctx.NextGeneratedParam()

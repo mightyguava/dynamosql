@@ -108,6 +108,8 @@ parser.row{
                   Operator: "=",
                   Operand: &parser.Operand{
                     Value: &parser.Value{
+                      Scalar: parser.Scalar{
+                      },
                       PlaceHolder: &":UserId",
                     },
                   },

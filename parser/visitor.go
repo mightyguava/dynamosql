@@ -10,6 +10,9 @@ import (
 // The visitor can call "next()" to continue traversal of child nodes.
 func Visit(node Node, visitor func(node Node, next func() error) error) error {
 	return visitor(node, func() error {
+		if reflect.ValueOf(node).IsNil() { // Workaround for Go's typed nil interfaces.
+			return nil
+		}
 		switch node := node.(type) {
 		case *Select:
 			if err := Visit(node.Projection, visitor); err != nil {
@@ -113,6 +116,30 @@ func Visit(node Node, visitor func(node Node, next func() error) error) error {
 				return Visit(node.DocumentPath, visitor)
 			}
 			return Visit(node.Value, visitor)
+		case *JSONObject:
+			for _, entry := range node.Entries {
+				if err := Visit(entry, visitor); err != nil {
+					return err
+				}
+			}
+			return nil
+		case *JSONObjectEntry:
+			return Visit(node.Value, visitor)
+		case *JSONArray:
+			for _, entry := range node.Entries {
+				if err := Visit(entry, visitor); err != nil {
+					return err
+				}
+			}
+			return nil
+		case *JSONValue:
+			switch {
+			case node.Object != nil:
+				return Visit(node.Object, visitor)
+			case node.Array != nil:
+				return Visit(node.Array, visitor)
+			}
+			return Visit(&node.Scalar, visitor)
 		case *Value, *PathFragment:
 			// Leaf nodes
 			return nil

@@ -41,7 +41,9 @@ parser.row{
                   Operator: "=",
                   Operand: &parser.Operand{
                     Value: &parser.Value{
-                      String: &"The Dark Knight",
+                      Scalar: parser.Scalar{
+                        Str: &"The Dark Knight",
+                      },
                     },
                   },
                 },
@@ -67,12 +69,16 @@ parser.row{
                             Between: &parser.Between{
                               Start: &parser.Operand{
                                 Value: &parser.Value{
-                                  Number: &2009,
+                                  Scalar: parser.Scalar{
+                                    Number: &2009,
+                                  },
                                 },
                               },
                               End: &parser.Operand{
                                 Value: &parser.Value{
-                                  Number: &2015,
+                                  Scalar: parser.Scalar{
+                                    Number: &2015,
+                                  },
                                 },
                               },
                             },
@@ -97,7 +103,9 @@ parser.row{
                               Operator: "=",
                               Operand: &parser.Operand{
                                 Value: &parser.Value{
-                                  String: &"Will Smith",
+                                  Scalar: parser.Scalar{
+                                    Str: &"Will Smith",
+                                  },
                                 },
                               },
                             },

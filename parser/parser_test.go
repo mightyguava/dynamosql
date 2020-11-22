@@ -96,7 +96,7 @@ func TestParseInsert(t *testing.T) {
 			query: "INSERT INTO `movies` VALUES (?)",
 			ast: &AST{Insert: &Insert{
 				Into:   "movies",
-				Values: []*ValueRow{{Value: &Value{PositionalPlaceholder: aws.Bool(true)}}},
+				Values: []*InsertTerminal{{Value: Value{PositionalPlaceholder: true}}},
 			}},
 		},
 		{
@@ -109,12 +109,12 @@ VALUES ('{"title":"hello","year":2009}'),
 			ast: &AST{
 				Insert: &Insert{
 					Into: "movies",
-					Values: []*ValueRow{
+					Values: []*InsertTerminal{
 						{
-							Value: &Value{String: aws.String(`{"title":"hello","year":2009}`)},
+							Value: Value{Scalar: Scalar{Str: aws.String(`{"title":"hello","year":2009}`)}},
 						},
 						{
-							Value: &Value{String: aws.String(`{"title":"foo","year":2938}`)},
+							Value: Value{Scalar: Scalar{Str: aws.String(`{"title":"foo","year":2938}`)}},
 						},
 					},
 				},
@@ -130,22 +130,18 @@ VALUES ({title:"hello",year:2009}),
 			ast: &AST{
 				Insert: &Insert{
 					Into: "movies",
-					Values: []*ValueRow{
+					Values: []*InsertTerminal{
 						{
-							Value: &Value{
-								Object: &Object{[]*ObjectEntry{
-									{"title", &Value{String: aws.String("hello")}},
-									{"year", &Value{Number: aws.Float64(2009)}},
-								}},
-							},
+							Object: &JSONObject{[]*JSONObjectEntry{
+								{"title", &JSONValue{Scalar: Scalar{Str: aws.String("hello")}}},
+								{"year", &JSONValue{Scalar: Scalar{Number: aws.Float64(2009)}}},
+							}},
 						},
 						{
-							Value: &Value{
-								Object: &Object{[]*ObjectEntry{
-									{"title", &Value{String: aws.String("foo")}},
-									{"year", &Value{Number: aws.Float64(2938)}},
-								}},
-							},
+							Object: &JSONObject{[]*JSONObjectEntry{
+								{"title", &JSONValue{Scalar: Scalar{Str: aws.String("foo")}}},
+								{"year", &JSONValue{Scalar: Scalar{Number: aws.Float64(2938)}}},
+							}},
 						},
 					},
 				},
