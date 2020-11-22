@@ -120,6 +120,37 @@ VALUES ('{"title":"hello","year":2009}'),
 				},
 			},
 		},
+		{
+			name: "object",
+			query: `
+INSERT INTO movies
+VALUES ({title:"hello",year:2009}),
+       ({title:"foo",year:2938});
+`,
+			ast: &AST{
+				Insert: &Insert{
+					Into: "movies",
+					Values: []*ValueRow{
+						{
+							Value: &Value{
+								Object: &Object{[]*ObjectEntry{
+									{"title", &Value{String: aws.String("hello")}},
+									{"year", &Value{Number: aws.Float64(2009)}},
+								}},
+							},
+						},
+						{
+							Value: &Value{
+								Object: &Object{[]*ObjectEntry{
+									{"title", &Value{String: aws.String("foo")}},
+									{"year", &Value{Number: aws.Float64(2938)}},
+								}},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

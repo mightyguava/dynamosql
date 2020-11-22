@@ -17,7 +17,7 @@ var (
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
 		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Operators><>|!=|<=|>=|[-+*/%:?,.()=<>\[\]])` +
+		`|(?P<Operators><>|!=|<=|>=|[-+*/%:?,.()=<>\[\]{}])` +
 		`|;`,
 	))
 	parser = participle.MustBuild(
@@ -284,6 +284,35 @@ func (p PathFragment) String() string {
 	return buf.String()
 }
 
+type ObjectEntry struct {
+	Key   string `@(Ident | String)`
+	Value *Value `":" @@`
+}
+
+type Object struct {
+	Entries []*ObjectEntry `"{" (@@ ("," @@)* ","?)? "}"`
+}
+
+func (a *Object) Literal() string {
+	out := make([]string, 0, len(a.Entries))
+	for _, entry := range a.Entries {
+		out = append(out, strconv.Quote(entry.Key)+":"+entry.Value.Literal())
+	}
+	return "{" + strings.Join(out, ",") + "}"
+}
+
+type Array struct {
+	Entries []*Value `"[" (@@ ("," @@)* ","?)? "]"`
+}
+
+func (a *Array) Literal() string {
+	out := make([]string, 0, len(a.Entries))
+	for _, v := range a.Entries {
+		out = append(out, v.Literal())
+	}
+	return "[" + strings.Join(out, ",") + "]"
+}
+
 type Value struct {
 	PlaceHolder           *string  `  @":" @Ident `
 	PositionalPlaceholder *bool    `| @"?" `
@@ -291,6 +320,8 @@ type Value struct {
 	String                *string  `| @String`
 	Boolean               *Boolean `| @("TRUE" | "FALSE")`
 	Null                  bool     `| @"NULL"`
+	Object                *Object  `| @@`
+	Array                 *Array   `| @@`
 }
 
 func (v *Value) node() {}
@@ -307,6 +338,10 @@ func (v Value) Literal() string {
 		return strconv.FormatBool(bool(*v.Boolean))
 	case v.Null:
 		return "NULL"
+	case v.Object != nil:
+		return v.Object.Literal()
+	case v.Array != nil:
+		return v.Array.Literal()
 	default:
 		panic("unexpected code path")
 	}
