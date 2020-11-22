@@ -42,13 +42,12 @@ func TestBuildQuery(t *testing.T) {
 	scanner := bufio.NewScanner(queries)
 	var parsed []item
 	for scanner.Scan() {
-		var ast parser.AST
 		queryStr := scanner.Text()
 		if strings.HasPrefix(queryStr, "--") {
 			// skip comments
 			continue
 		}
-		err := parser.Parser.ParseString(queryStr, &ast)
+		ast, err := parser.Parse(queryStr)
 		msg := fmt.Sprintf("Parse: %s\n%s", queryStr, repr.String(ast, repr.Indent("  ")))
 		require.NoError(t, err, msg)
 		query, err := prepare(getTable(queryStr), ast.Select)
@@ -81,13 +80,12 @@ func TestInvalidQueries(t *testing.T) {
 	scanner := bufio.NewScanner(queries)
 	var parsed []item
 	for scanner.Scan() {
-		var ast parser.AST
 		queryStr := scanner.Text()
 		if strings.HasPrefix(queryStr, "--") {
 			// skip comments
 			continue
 		}
-		err := parser.Parser.ParseString(queryStr, &ast)
+		ast, err := parser.Parse(queryStr)
 		if err == nil {
 			var q *PreparedQuery
 			q, err = prepare(table, ast.Select)

@@ -1,6 +1,6 @@
 parser.row{
   Query: "SELECT * FROM gamescores WHERE UserId = ? AND TopScore > ?",
-  AST: parser.AST{
+  AST: &parser.AST{
     Select: &parser.Select{
       Projection: &parser.ProjectionExpression{
         All: true,

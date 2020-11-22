@@ -20,7 +20,7 @@ var (
 		`|(?P<Operators><>|!=|<=|>=|[-+*/%:?,.()=<>\[\]])` +
 		`|;`,
 	))
-	Parser = participle.MustBuild(
+	parser = participle.MustBuild(
 		&AST{},
 		participle.Lexer(Lexer),
 		participle.Unquote("String"),
@@ -29,6 +29,12 @@ var (
 		participle.UseLookahead(2),
 	)
 )
+
+func Parse(s string) (*AST, error) {
+	var ast AST
+	err := parser.ParseString(s, &ast)
+	return &ast, err
+}
 
 // UnquoteIdent removes surrounding backticks (`) from quoted identifiers
 func UnquoteIdent() participle.Option {
@@ -58,8 +64,10 @@ type Node interface {
 }
 
 type AST struct {
-	Select *Select `"SELECT" @@`
-	End    string  `( ";" )?`
+	Select  *Select `(   "SELECT"  @@  `
+	Insert  *Insert `  | "INSERT"  @@  `
+	Replace *Insert `  | "REPLACE" @@ )`
+	End     string  `( ";" )?`
 }
 
 // Select based on http://www.h2database.com/html/grammar.html
@@ -70,6 +78,15 @@ type Select struct {
 	Where      *AndExpression        `( "WHERE" @@ )?`
 	Descending *ScanDescending       `( @"ASC" | @"DESC" )?`
 	Limit      *int                  `( "LIMIT" @Number )?`
+}
+
+type Insert struct {
+	Into   string      `"INTO" ( @Ident ( @"." @Ident )* | @QuotedIdent )`
+	Values []*ValueRow `"VALUES" @@ ( "," @@ )* `
+}
+
+type ValueRow struct {
+	Value *Value `"(" @@ ")"`
 }
 
 func (e *Select) node() {}

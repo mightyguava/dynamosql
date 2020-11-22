@@ -1,6 +1,6 @@
 parser.row{
   Query: "SELECT title, year FROM movies WHERE title = \"The Dark Knight\"",
-  AST: parser.AST{
+  AST: &parser.AST{
     Select: &parser.Select{
       Projection: &parser.ProjectionExpression{
         Columns: []*parser.ProjectionColumn{

@@ -34,8 +34,8 @@ type PreparedQuery struct {
 }
 
 func PrepareQuery(ctx context.Context, tables *schema.TableLoader, query string) (*PreparedQuery, error) {
-	var ast parser.AST
-	if err := parser.Parser.ParseString(query, &ast); err != nil {
+	ast, err := parser.Parse(query)
+	if err != nil {
 		return nil, err
 	}
 	sel := ast.Select

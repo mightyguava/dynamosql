@@ -1,6 +1,6 @@
 parser.row{
   Query: "SELECT Scores[3], Scores[3][2] FROM gamescores WHERE UserId = :UserId",
-  AST: parser.AST{
+  AST: &parser.AST{
     Select: &parser.Select{
       Projection: &parser.ProjectionExpression{
         Columns: []*parser.ProjectionColumn{

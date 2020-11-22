@@ -1,6 +1,6 @@
 parser.row{
   Query: "SELECT * FROM movies WHERE UserId = True",
-  AST: parser.AST{
+  AST: &parser.AST{
     Select: &parser.Select{
       Projection: &parser.ProjectionExpression{
         All: true,

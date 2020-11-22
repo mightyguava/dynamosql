@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,7 @@ import (
 func TestGoldenGoodQueries(t *testing.T) {
 	type row struct {
 		Query string
-		AST   AST
+		AST   *AST
 	}
 
 	queries, err := os.Open("testdata/queries.sql")
@@ -27,13 +28,12 @@ func TestGoldenGoodQueries(t *testing.T) {
 	scanner := bufio.NewScanner(queries)
 	var parsed []row
 	for scanner.Scan() {
-		var ast AST
 		query := scanner.Text()
 		if strings.HasPrefix(query, "--") {
 			// skip comments
 			continue
 		}
-		err := Parser.ParseString(query, &ast)
+		ast, err := Parse(query)
 		assert.NoError(t, err, "Parse: %s", query)
 		parsed = append(parsed, row{
 			Query: query,
@@ -64,13 +64,12 @@ func TestGoldenBadQueries(t *testing.T) {
 	scanner := bufio.NewScanner(queries)
 	var parsed []row
 	for scanner.Scan() {
-		var ast AST
 		query := scanner.Text()
 		if strings.HasPrefix(query, "--") {
 			// skip comments
 			continue
 		}
-		err := Parser.ParseString(query, &ast)
+		_, err := Parse(query)
 		require.Errorf(t, err, "Parse %s, expected error but did not", query)
 		parsed = append(parsed, row{
 			Query: query,
@@ -83,5 +82,51 @@ func TestGoldenBadQueries(t *testing.T) {
 		goldie.WithNameSuffix(".golden.go"))
 	for i, q := range parsed {
 		g.Assert(t, fmt.Sprintf("bad_queries.%02d", i), []byte(testutil.MarshalJSON(q)))
+	}
+}
+
+func TestParseInsert(t *testing.T) {
+	tests := []struct {
+		name  string
+		query string
+		ast   *AST
+	}{
+		{
+			name:  "basic",
+			query: "INSERT INTO `movies` VALUES (?)",
+			ast: &AST{Insert: &Insert{
+				Into:   "movies",
+				Values: []*ValueRow{{Value: &Value{PositionalPlaceholder: aws.Bool(true)}}},
+			}},
+		},
+		{
+			name: "literal",
+			query: `
+INSERT INTO movies
+VALUES ('{"title":"hello","year":2009}'),
+       ('{"title":"foo","year":2938}');
+`,
+			ast: &AST{
+				Insert: &Insert{
+					Into: "movies",
+					Values: []*ValueRow{
+						{
+							Value: &Value{String: aws.String(`{"title":"hello","year":2009}`)},
+						},
+						{
+							Value: &Value{String: aws.String(`{"title":"foo","year":2938}`)},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Log("Query: ", test.query)
+			ast, err := Parse(test.query)
+			require.NoError(t, err)
+			assert.Equal(t, test.ast, ast)
+		})
 	}
 }

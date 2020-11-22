@@ -1,6 +1,6 @@
 parser.row{
   Query: "SELECT document(*) FROM gamescores WHERE UserId = :UserId",
-  AST: parser.AST{
+  AST: &parser.AST{
     Select: &parser.Select{
       Projection: &parser.ProjectionExpression{
         All: true,
