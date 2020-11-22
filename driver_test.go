@@ -148,3 +148,50 @@ func stringSlice(ns []sql.NullString) []string {
 	}
 	return ss
 }
+
+func TestInsertAndQuery(t *testing.T) {
+	fix := fixtures.Movies
+	fix.Data = nil
+	sess := fixtures.SetUp(t, fix)
+
+	driver, err := New(Config{Session: sess}).OpenConnector("")
+	require.NoError(t, err)
+	db := sql.OpenDB(driver)
+	err = db.Ping()
+	require.NoError(t, err)
+
+	prisoners := fixtures.Movie{"Prisoners", 2013, fixtures.MovieInfo{}}
+	rushHour := fixtures.Movie{"Rush Hour", 1998, fixtures.MovieInfo{}}
+	forrestGump := fixtures.Movie{"Forrest Gump", 1994, fixtures.MovieInfo{}}
+	inception := fixtures.Movie{"Inception", 2010, fixtures.MovieInfo{}}
+
+	v, err := db.Exec("INSERT INTO movies VALUES (?)", []fixtures.Movie{
+		prisoners, rushHour,
+	})
+	require.NoError(t, err)
+	rows, err := v.RowsAffected()
+	require.NoError(t, err)
+	require.Equal(t, int64(2), rows)
+
+	v, err = db.Exec("INSERT INTO movies VALUES (?)", forrestGump)
+	require.NoError(t, err)
+	rows, err = v.RowsAffected()
+	require.NoError(t, err)
+	require.Equal(t, int64(1), rows)
+
+	v, err = db.Exec(`
+INSERT INTO movies VALUES 
+('{"title":"Inception", "year": 2010}')
+`)
+	require.NoError(t, err)
+	rows, err = v.RowsAffected()
+	require.NoError(t, err)
+	require.Equal(t, int64(1), rows)
+
+	for _, m := range []fixtures.Movie{prisoners, rushHour, forrestGump, inception} {
+		row := db.QueryRow(`SELECT * FROM movies WHERE title = ?`, m.Title)
+		var movie fixtures.Movie
+		require.NoError(t, row.Scan(Document(&movie)))
+		require.Equal(t, m, movie)
+	}
+}

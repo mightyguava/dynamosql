@@ -12,7 +12,7 @@ import (
 
 var (
 	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
-		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX|ASC|DESC)\b` +
+		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|INSERT|INTO|VALUES|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX|ASC|DESC)\b` +
 		"|(?P<QuotedIdent>`[^`]+`)" +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +

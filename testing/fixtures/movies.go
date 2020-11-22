@@ -90,19 +90,21 @@ var moviesTable = aws.String("movies")
 
 // Movie is a container for movie data
 type Movie struct {
-	Title string `json:"title"`
-	Year  int    `json:"year"`
-	Info  struct {
-		Actors          []*string `json:"actors"`
-		Directors       []*string `json:"directors"`
-		Genres          []*string `json:"genres"`
-		ImageURL        string    `json:"image_url"`
-		Plot            string    `json:"plot"`
-		Rank            int       `json:"rank"`
-		Rating          float64   `json:"rating"`
-		ReleaseDate     string    `json:"release_date"`
-		RunningTimeSecs int       `json:"running_time_secs"`
-	} `json:"info"`
+	Title string    `json:"title"`
+	Year  int       `json:"year"`
+	Info  MovieInfo `json:"info"`
+}
+
+type MovieInfo struct {
+	Actors          []*string `json:"actors"`
+	Directors       []*string `json:"directors"`
+	Genres          []*string `json:"genres"`
+	ImageURL        string    `json:"image_url"`
+	Plot            string    `json:"plot"`
+	Rank            int       `json:"rank"`
+	Rating          float64   `json:"rating"`
+	ReleaseDate     string    `json:"release_date"`
+	RunningTimeSecs int       `json:"running_time_secs"`
 }
 
 const movieData = `[

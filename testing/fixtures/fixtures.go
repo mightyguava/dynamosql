@@ -37,7 +37,6 @@ func SetUp(t *testing.T, fixtures ...Fixture) *session.Session {
 		}
 	}
 	cleanup()
-	t.Cleanup(cleanup)
 
 	for _, fixture := range fixtures {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
@@ -63,7 +62,9 @@ func SetUp(t *testing.T, fixtures ...Fixture) *session.Session {
 			}
 		}
 
-		fixture.Data(t, client)
+		if fixture.Data != nil {
+			fixture.Data(t, client)
+		}
 	}
 	return sess
 }

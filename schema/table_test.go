@@ -19,6 +19,7 @@ func TestNewTable(t *testing.T) {
 		require.NoError(t, err)
 		table := NewTable(desc.Table)
 		expectedTable := &Table{
+			Name:    "movies",
 			HashKey: "title",
 			SortKey: "year",
 		}
@@ -32,6 +33,7 @@ func TestNewTable(t *testing.T) {
 		require.NoError(t, err)
 		table := NewTable(desc.Table)
 		expectedTable := &Table{
+			Name:    "gamescores",
 			HashKey: "UserId",
 			SortKey: "GameTitle",
 			Indexes: []Index{
@@ -63,6 +65,7 @@ func TestLoadTable(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedTable := &Table{
+		Name:    "movies",
 		HashKey: "title",
 		SortKey: "year",
 	}

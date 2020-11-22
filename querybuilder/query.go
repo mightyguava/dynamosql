@@ -116,6 +116,8 @@ func bindArgs(fixedParams map[string]interface{}, namedParams NamedParams, posit
 
 func toAttributeValue(attr interface{}) (*dynamodb.AttributeValue, error) {
 	switch v := attr.(type) {
+	case *dynamodb.AttributeValue:
+		return v, nil
 	case string:
 		return &dynamodb.AttributeValue{S: &v}, nil
 	case float64:
@@ -186,9 +188,7 @@ func prepare(table *schema.Table, ast *parser.Select) (*PreparedQuery, error) {
 	if filterExpr != "" {
 		req.FilterExpression = aws.String(filterExpr)
 	}
-	if len(ctx.Substitutions) > 0 {
-		req.ExpressionAttributeNames = aws.StringMap(ctx.Substitutions)
-	}
+	req.ExpressionAttributeNames = ctx.ExpressionAttributeNames()
 	if index != "" {
 		req.IndexName = aws.String(index)
 	}
@@ -241,6 +241,13 @@ func NewContext(table *schema.Table, index string) *Context {
 		FixedParams:      make(map[string]interface{}),
 		Substitutions:    make(map[string]string),
 	}
+}
+
+func (c *Context) ExpressionAttributeNames() map[string]*string {
+	if len(c.Substitutions) == 0 {
+		return nil
+	}
+	return aws.StringMap(c.Substitutions)
 }
 
 // IsKey returns true if the field is a hash key or sort key for the selected table/index.

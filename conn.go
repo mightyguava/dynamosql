@@ -18,11 +18,16 @@ type conn struct {
 	mapToGoType bool
 }
 
+func (c conn) CheckNamedValue(value *driver.NamedValue) error {
+	return nil
+}
+
 var (
 	_ driver.Conn               = &conn{}
 	_ driver.ExecerContext      = &conn{}
 	_ driver.QueryerContext     = &conn{}
 	_ driver.ConnPrepareContext = &conn{}
+	_ driver.NamedValueChecker  = &conn{}
 )
 
 func (c conn) Prepare(query string) (driver.Stmt, error) {
@@ -83,5 +88,9 @@ func (c conn) QueryContext(ctx context.Context, query string, args []driver.Name
 }
 
 func (c conn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
-	panic("implement me")
+	q, err := querybuilder.PrepareInsert(ctx, c.tables, query)
+	if err != nil {
+		return nil, err
+	}
+	return q.Do(c.dynamo, args)
 }

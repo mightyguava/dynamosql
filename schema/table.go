@@ -12,6 +12,7 @@ import (
 
 // Table contains the schema for a DynamoDB table
 type Table struct {
+	Name    string
 	HashKey string
 	SortKey string
 	Indexes []Index
@@ -42,6 +43,7 @@ func NewTable(desc *dynamodb.TableDescription) *Table {
 	}
 	hash, sort := parseKeySchema(desc.KeySchema)
 	return &Table{
+		Name:    *desc.TableName,
 		HashKey: hash,
 		SortKey: sort,
 		Indexes: indexes,
@@ -74,6 +76,7 @@ func NewTableFromCreate(desc *dynamodb.CreateTableInput) *Table {
 	}
 	hash, sort := parseKeySchema(desc.KeySchema)
 	return &Table{
+		Name:    *desc.TableName,
 		HashKey: hash,
 		SortKey: sort,
 		Indexes: indexes,
