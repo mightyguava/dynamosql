@@ -178,3 +178,38 @@ func convertValue(av *dynamodb.AttributeValue) interface{} {
 		return nil
 	}
 }
+
+type oneRow struct {
+	item        map[string]*dynamodb.AttributeValue
+	consumed    bool
+	mapToGoType bool
+}
+
+func (o *oneRow) Columns() []string {
+	return []string{"document"}
+}
+
+func (o *oneRow) Close() error {
+	return nil
+}
+
+func (o *oneRow) Next(dest []driver.Value) error {
+	if o.consumed || o.item == nil {
+		return io.EOF
+	}
+	o.consumed = true
+
+	if !o.mapToGoType {
+		dest[0] = o.item
+		return nil
+	}
+
+	out := make(map[string]interface{}, len(o.item))
+	if err := dynamodbattribute.UnmarshalMap(o.item, &out); err != nil {
+		return err
+	}
+	dest[0] = out
+	return nil
+}
+
+var _ driver.Rows = &oneRow{}

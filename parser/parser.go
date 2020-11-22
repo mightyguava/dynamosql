@@ -12,7 +12,7 @@ import (
 
 var (
 	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
-		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|INSERT|INTO|VALUES|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX|ASC|DESC)\b` +
+		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|INSERT|INTO|VALUES|RETURNING|NONE|ALL_OLD|UPDATED_OLD|ALL_NEW|UPDATED_NEW|DELETE|CHECK|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX|ASC|DESC)\b` +
 		"|(?P<QuotedIdent>`[^`]+`)" +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
@@ -81,8 +81,9 @@ type Select struct {
 }
 
 type Insert struct {
-	Into   string            `"INTO" ( @Ident ( @"." @Ident )* | @QuotedIdent )`
-	Values []*InsertTerminal `"VALUES" "(" @@ ")" ( "," "(" @@ ")" )* `
+	Into      string            `"INTO" ( @Ident ( @"." @Ident )* | @QuotedIdent )`
+	Values    []*InsertTerminal `"VALUES" "(" @@ ")" ( "," "(" @@ ")" )* `
+	Returning *string           `( "RETURNING" @( "NONE" | "ALL_OLD" ) )?`
 }
 
 type InsertTerminal struct {
@@ -298,9 +299,9 @@ type JSONObject struct {
 
 func (j *JSONObject) node() {}
 
-func (a *JSONObject) String() string {
-	out := make([]string, 0, len(a.Entries))
-	for _, entry := range a.Entries {
+func (j *JSONObject) String() string {
+	out := make([]string, 0, len(j.Entries))
+	for _, entry := range j.Entries {
 		out = append(out, strconv.Quote(entry.Key)+":"+entry.Value.String())
 	}
 	return "{" + strings.Join(out, ",") + "}"
@@ -312,9 +313,9 @@ type JSONArray struct {
 
 func (j *JSONArray) node() {}
 
-func (a *JSONArray) String() string {
-	out := make([]string, 0, len(a.Entries))
-	for _, v := range a.Entries {
+func (j *JSONArray) String() string {
+	out := make([]string, 0, len(j.Entries))
+	for _, v := range j.Entries {
 		out = append(out, v.String())
 	}
 	return "[" + strings.Join(out, ",") + "]"

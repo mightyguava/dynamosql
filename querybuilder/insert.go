@@ -22,15 +22,23 @@ type PreparedInsert struct {
 	Table       *schema.Table
 	Placeholder string
 	Values      []map[string]*dynamodb.AttributeValue
+	Returning   *string
+	Replace     bool
 }
 
-func PrepareInsert(ctx context.Context, tables *schema.TableLoader, query string) (*PreparedInsert, error) {
-	ast, err := parser.Parse(query)
-	if err != nil {
-		return nil, err
-	}
-	ins := ast.Insert
-	if ins == nil {
+func PrepareInsert(ctx context.Context, tables *schema.TableLoader, ast *parser.AST) (*PreparedInsert, error) {
+	var ins *parser.Insert
+	replace := false
+	switch {
+	case ast.Insert != nil:
+		ins = ast.Insert
+		if ins.Returning != nil && *ins.Returning != "NONE" {
+			return nil, errors.New("RETURNING is not allowed on INSERT")
+		}
+	case ast.Replace != nil:
+		ins = ast.Replace
+		replace = true
+	default:
 		return nil, fmt.Errorf("expected INSERT but got %s", repr.String(ast))
 	}
 	table, err := tables.Get(ctx, ins.Into)
@@ -75,24 +83,12 @@ func PrepareInsert(ctx context.Context, tables *schema.TableLoader, query string
 		Table:       table,
 		Placeholder: placeholder,
 		Values:      values,
+		Returning:   ins.Returning,
+		Replace:     replace,
 	}, nil
 }
 
-type insertResult struct {
-	count int
-}
-
-var _ driver.Result = &insertResult{}
-
-func (i insertResult) LastInsertId() (int64, error) {
-	return 0, errors.New("LastInsertId is not supported")
-}
-
-func (i insertResult) RowsAffected() (int64, error) {
-	return int64(i.count), nil
-}
-
-func (p *PreparedInsert) Do(dynamo dynamodbiface.DynamoDBAPI, args []driver.NamedValue) (driver.Result, error) {
+func (p *PreparedInsert) Do(ctx context.Context, dynamo dynamodbiface.DynamoDBAPI, args []driver.NamedValue) (*DriverResult, error) {
 	if len(args) > 0 && len(p.Values) > 0 {
 		return nil, errors.New("no arguments expected")
 	}
@@ -118,29 +114,34 @@ func (p *PreparedInsert) Do(dynamo dynamodbiface.DynamoDBAPI, args []driver.Name
 		return nil, errors.New("no values to insert")
 	}
 	if len(values) == 1 {
-		_, err := dynamo.PutItem(p.toPutItem(values[0]))
+		resp, err := dynamo.PutItem(p.toPutItem(values[0]))
 		if err != nil {
 			return nil, err
 		}
-		return &insertResult{count: 1}, nil
+		return &DriverResult{
+			count:    1,
+			returned: resp.Attributes,
+		}, nil
+	}
+	if p.Returning != nil && *p.Returning != "NONE" {
+		return nil, errors.New("cannot use RETURNING with more than 1 item")
 	}
 	_, err := dynamo.TransactWriteItems(p.toTransactWrite(values))
 	if err != nil {
 		return nil, err
 	}
-	return &insertResult{count: len(values)}, nil
+	return &DriverResult{count: len(values)}, nil
 }
 
 func (p *PreparedInsert) toTransactWrite(items []map[string]*dynamodb.AttributeValue) *dynamodb.TransactWriteItemsInput {
-	ctx := Context{}
-	key := ctx.substitute(p.Table.HashKey)
+	conditionExpr, exprAttrNames := p.conditionExpr()
 
 	puts := make([]*dynamodb.TransactWriteItem, 0, len(items))
 	for _, item := range items {
 		puts = append(puts, &dynamodb.TransactWriteItem{
 			Put: &dynamodb.Put{
-				ConditionExpression:      aws.String(fmt.Sprintf("attribute_not_exists(%s)", key)),
-				ExpressionAttributeNames: ctx.ExpressionAttributeNames(),
+				ConditionExpression:      conditionExpr,
+				ExpressionAttributeNames: exprAttrNames,
 				Item:                     item,
 				TableName:                &p.Table.Name,
 			},
@@ -152,14 +153,26 @@ func (p *PreparedInsert) toTransactWrite(items []map[string]*dynamodb.AttributeV
 }
 
 func (p *PreparedInsert) toPutItem(item map[string]*dynamodb.AttributeValue) *dynamodb.PutItemInput {
-	ctx := Context{}
-	key := ctx.substitute(p.Table.HashKey)
+	conditionExpr, exprAttrNames := p.conditionExpr()
 	return &dynamodb.PutItemInput{
-		ConditionExpression:      aws.String(fmt.Sprintf("attribute_not_exists(%s)", key)),
-		ExpressionAttributeNames: ctx.ExpressionAttributeNames(),
+		ConditionExpression:      conditionExpr,
+		ExpressionAttributeNames: exprAttrNames,
 		Item:                     item,
 		TableName:                &p.Table.Name,
+		ReturnValues:             p.Returning,
 	}
+}
+
+// In REPLACE, return nil. In INSERT, return a condition that will fail Puts on existing rows.
+func (p *PreparedInsert) conditionExpr() (conditionExpr *string, exprAttrNames map[string]*string) {
+	if p.Replace {
+		return nil, nil
+	}
+	ctx := Context{}
+	key := ctx.substitute(p.Table.HashKey)
+	conditionExpr = aws.String(fmt.Sprintf("attribute_not_exists(%s)", key))
+	exprAttrNames = ctx.ExpressionAttributeNames()
+	return
 }
 
 func jsonStringToDynamodbMap(v string) (map[string]*dynamodb.AttributeValue, error) {

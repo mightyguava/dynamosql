@@ -100,6 +100,23 @@ func TestParseInsert(t *testing.T) {
 			}},
 		},
 		{
+			name:  "basic replace",
+			query: "REPLACE INTO `movies` VALUES (?)",
+			ast: &AST{Replace: &Insert{
+				Into:   "movies",
+				Values: []*InsertTerminal{{Value: Value{PositionalPlaceholder: true}}},
+			}},
+		},
+		{
+			name:  "replace returning",
+			query: "REPLACE INTO `movies` VALUES (?) RETURNING ALL_OLD",
+			ast: &AST{Replace: &Insert{
+				Into:      "movies",
+				Values:    []*InsertTerminal{{Value: Value{PositionalPlaceholder: true}}},
+				Returning: aws.String("ALL_OLD"),
+			}},
+		},
+		{
 			name: "literal",
 			query: `
 INSERT INTO movies

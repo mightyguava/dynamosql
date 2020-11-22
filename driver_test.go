@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/repr"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
 
@@ -180,7 +181,7 @@ func TestInsertAndQuery(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int64(1), rows)
 
-	v, err = db.Exec(`
+	_, err = db.Exec(`
 INSERT INTO movies VALUES 
 ('{"title":"Inception", "year": 2010}')
 `)
@@ -200,4 +201,76 @@ INSERT INTO movies VALUES
 		require.NoError(t, row.Scan(Document(&movie)))
 		require.Equal(t, m, movie)
 	}
+}
+
+func TestInsertCannotOverwrite(t *testing.T) {
+	fix := fixtures.Movies
+	fix.Data = nil
+	sess := fixtures.SetUp(t, fix)
+
+	driver, err := New(Config{Session: sess}).OpenConnector("")
+	require.NoError(t, err)
+	db := sql.OpenDB(driver)
+	err = db.Ping()
+	require.NoError(t, err)
+
+	prisoners := fixtures.Movie{"Prisoners", 2013, fixtures.MovieInfo{}}
+	rushHour := fixtures.Movie{"Rush Hour", 1998, fixtures.MovieInfo{}}
+
+	_, err = db.Exec("INSERT INTO movies VALUES (?)", []fixtures.Movie{
+		prisoners,
+	})
+	require.NoError(t, err)
+
+	// Can't overwrite
+	_, err = db.Exec("INSERT INTO movies VALUES (?)", []fixtures.Movie{
+		prisoners,
+	})
+	require.Error(t, err)
+	require.IsType(t, &dynamodb.ConditionalCheckFailedException{}, err)
+
+	// Failure is transactional
+	_, err = db.Exec("INSERT INTO movies VALUES (?)", []fixtures.Movie{
+		rushHour,
+		prisoners,
+	})
+	require.Error(t, err)
+	require.IsType(t, &dynamodb.TransactionCanceledException{}, err)
+
+	row := db.QueryRow(`SELECT * FROM movies WHERE title = ?`, rushHour.Title)
+	var movie fixtures.Movie
+	require.Equal(t, sql.ErrNoRows, row.Scan(Document(&movie)))
+}
+
+func TestReplaceCanOverwrite(t *testing.T) {
+	fix := fixtures.Movies
+	fix.Data = nil
+	sess := fixtures.SetUp(t, fix)
+
+	driver, err := New(Config{Session: sess}).OpenConnector("")
+	require.NoError(t, err)
+	db := sql.OpenDB(driver)
+	err = db.Ping()
+	require.NoError(t, err)
+
+	prisoners := fixtures.Movie{"Prisoners", 2013, fixtures.MovieInfo{}}
+
+	_, err = db.Exec("REPLACE INTO movies VALUES (?)", []fixtures.Movie{
+		prisoners,
+	})
+	require.NoError(t, err)
+
+	updatedPrisioners := prisoners
+	updatedPrisioners.Info = fixtures.MovieInfo{Plot: "drama"}
+	row := db.QueryRow("REPLACE INTO movies VALUES (?) RETURNING ALL_OLD", []fixtures.Movie{
+		updatedPrisioners,
+	})
+	movie := fixtures.Movie{}
+	require.NoError(t, row.Scan(Document(&movie)))
+	require.Equal(t, prisoners, movie)
+
+	row = db.QueryRow(`SELECT * FROM movies WHERE title = ?`, updatedPrisioners.Title)
+	movie = fixtures.Movie{}
+	require.NoError(t, row.Scan(Document(&movie)))
+	require.Equal(t, updatedPrisioners, movie)
 }
