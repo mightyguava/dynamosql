@@ -88,6 +88,20 @@ func PrepareInsert(ctx context.Context, tables *schema.TableLoader, ast *parser.
 	}, nil
 }
 
+type driverResult struct {
+	count int
+}
+
+var _ driver.Result = &driverResult{}
+
+func (i driverResult) LastInsertId() (int64, error) {
+	return 0, errors.New("LastInsertId is not supported")
+}
+
+func (i driverResult) RowsAffected() (int64, error) {
+	return int64(i.count), nil
+}
+
 func (p *PreparedInsert) Do(ctx context.Context, dynamo dynamodbiface.DynamoDBAPI, args []driver.NamedValue) (*DriverResult, error) {
 	if len(args) > 0 && len(p.Values) > 0 {
 		return nil, errors.New("no arguments expected")

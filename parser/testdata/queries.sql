@@ -35,3 +35,8 @@ SELECT * FROM movies WHERE UserId = :UserId DESC
 SELECT * FROM namespaced.movies WHERE UserId = :UserId
 -- positional placeholders (?)
 SELECT * FROM gamescores WHERE UserId = ? AND TopScore > ?
+-- create table
+CREATE TABLE movies (title STRING, year NUMBER);
+CREATE TABLE movies (title STRING HASH KEY, year NUMBER RANGE KEY);
+CREATE TABLE movies (title STRING, year NUMBER, GLOBAL SECONDARY INDEX year_title HASH(year) RANGE(title) PROJECTION ALL PROVISIONED THROUGHPUT READ 1 WRITE 1);
+CREATE TABLE movies (title STRING, year NUMBER, LOCAL SECONDARY INDEX year_index RANGE(year) PROJECTION ALL);

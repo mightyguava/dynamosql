@@ -3,6 +3,8 @@ package parser
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/alecthomas/repr"
 )
 
 // Visit nodes in the AST
@@ -14,6 +16,28 @@ func Visit(node Node, visitor func(node Node, next func() error) error) error {
 			return nil
 		}
 		switch node := node.(type) {
+		case *CreateTable:
+			for _, entry := range node.Entries {
+				if err := Visit(entry, visitor); err != nil {
+					return err
+				}
+			}
+			return nil
+		case *CreateTableEntry:
+			switch {
+			case node.Attr != nil:
+				return Visit(node.Attr, visitor)
+			case node.ProvisionedThroughput != nil:
+				return Visit(node.ProvisionedThroughput, visitor)
+			case node.GlobalSecondaryIndex != nil:
+				return Visit(node.GlobalSecondaryIndex, visitor)
+			case node.LocalSecondaryIndex != nil:
+				return Visit(node.LocalSecondaryIndex, visitor)
+			default:
+				panic(repr.String(node))
+			}
+		case *TableAttr, *GlobalSecondaryIndex, *LocalSecondaryIndex, *ProvisionedThroughput:
+			return nil
 		case *Select:
 			if err := Visit(node.Projection, visitor); err != nil {
 				return err

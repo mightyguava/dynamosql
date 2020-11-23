@@ -13,6 +13,12 @@ type ExecStmt interface {
 	Do(ctx context.Context, dynamo dynamodbiface.DynamoDBAPI, args []driver.NamedValue) (*DriverResult, error)
 }
 
+type execStatementFunc func(ctx context.Context, dynamo dynamodbiface.DynamoDBAPI, args []driver.NamedValue) (*DriverResult, error)
+
+func (e execStatementFunc) Do(ctx context.Context, dynamo dynamodbiface.DynamoDBAPI, args []driver.NamedValue) (*DriverResult, error) {
+	return e(ctx, dynamo, args)
+}
+
 type DriverResult struct {
 	count    int
 	returned map[string]*dynamodb.AttributeValue

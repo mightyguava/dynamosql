@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/repr"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
@@ -273,4 +274,32 @@ func TestReplaceCanOverwrite(t *testing.T) {
 	movie = fixtures.Movie{}
 	require.NoError(t, row.Scan(Document(&movie)))
 	require.Equal(t, updatedPrisioners, movie)
+}
+
+func TestCreateTable(t *testing.T) {
+	sess := fixtures.SetUp(t)
+	client := dynamodb.New(sess)
+	_, _ = client.DeleteTable(&dynamodb.DeleteTableInput{TableName: aws.String("movies")})
+	defer func() {
+		_, _ = client.DeleteTable(&dynamodb.DeleteTableInput{TableName: aws.String("movies")})
+	}()
+	driver, err := New(Config{Session: sess}).OpenConnector("")
+	require.NoError(t, err)
+	db := sql.OpenDB(driver)
+	err = db.Ping()
+	require.NoError(t, err)
+	_, err = db.Exec(`
+		CREATE TABLE movies (
+			title STRING HASH KEY,
+			year NUMBER RANGE KEY,
+			director STRING,
+			
+			PROVISIONED THROUGHPUT READ 1 WRITE 1,
+			GLOBAL SECONDARY INDEX director_index
+				HASH(year) RANGE(director)
+				PROJECTION ALL
+				PROVISIONED THROUGHPUT READ 1 WRITE 1
+		)
+    `)
+	require.NoError(t, err)
 }

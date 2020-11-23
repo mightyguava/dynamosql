@@ -12,7 +12,7 @@ import (
 
 var (
 	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
-		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|INSERT|INTO|VALUES|RETURNING|NONE|ALL_OLD|UPDATED_OLD|ALL_NEW|UPDATED_NEW|DELETE|CHECK|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX|ASC|DESC)\b` +
+		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|INSERT|INTO|VALUES|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX|ASC|DESC|CREATE|TABLE|HASH|RANGE|PROJECTION|PROVISIONED|THROUGHPUT|READ|WRITE|GLOBAL|LOCAL|INDEX|SECONDARY|STRING|NUMBER|BINARY|RETURNING|NONE|ALL_OLD|UPDATED_OLD|ALL_NEW|UPDATED_NEW|DELETE|CHECK)\b` +
 		"|(?P<QuotedIdent>`[^`]+`)" +
 		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
@@ -64,11 +64,66 @@ type Node interface {
 }
 
 type AST struct {
-	Select  *Select `(   "SELECT"  @@  `
-	Insert  *Insert `  | "INSERT"  @@  `
-	Replace *Insert `  | "REPLACE" @@ )`
-	End     string  `( ";" )?`
+	Select      *Select      `(   "SELECT"         @@`
+	Insert      *Insert      `  | "INSERT"         @@`
+	Replace     *Insert      `  | "REPLACE"        @@`
+	CreateTable *CreateTable `  | "CREATE" "TABLE" @@ ) ";"?`
 }
+
+type CreateTable struct {
+	Table   string              `@(Ident | QuotedIdent) "("`
+	Entries []*CreateTableEntry `@@ ("," @@)* ")"`
+}
+
+func (c *CreateTable) node() {}
+
+type CreateTableEntry struct {
+	GlobalSecondaryIndex  *GlobalSecondaryIndex  `  @@`
+	LocalSecondaryIndex   *LocalSecondaryIndex   `| @@`
+	ProvisionedThroughput *ProvisionedThroughput `| @@`
+	Attr                  *TableAttr             `| @@` // Must be last.
+}
+
+func (c *CreateTableEntry) node() {}
+
+type ProvisionedThroughput struct {
+	ReadCapacityUnits  int64 `"PROVISIONED" "THROUGHPUT" "READ" @Number`
+	WriteCapacityUnits int64 `"WRITE" @Number`
+}
+
+func (p *ProvisionedThroughput) node() {}
+
+type GlobalSecondaryIndex struct {
+	Name                  string                 `"GLOBAL" "SECONDARY" "INDEX" @(Ident | QuotedIdent)`
+	PartitionKey          string                 `"HASH" "(" @(Ident | QuotedIdent) ")"`
+	SortKey               string                 `"RANGE" "(" @(Ident | QuotedIdent) ")"`
+	Projection            *Projection            `"PROJECTION" @@`
+	ProvisionedThroughput *ProvisionedThroughput `@@`
+}
+
+func (c *GlobalSecondaryIndex) node() {}
+
+type Projection struct {
+	KeysOnly bool     `  @("KEYS" "ONLY")`
+	All      bool     `| @"ALL"`
+	Include  []string `| "INCLUDE" (@(Ident | QuotedIdent) ("," (@(Ident | QuotedIdent)))*)`
+}
+
+type LocalSecondaryIndex struct {
+	Name       string      `"LOCAL" "SECONDARY" "INDEX" @(Ident | QuotedIdent)`
+	SortKey    string      `"RANGE" "(" @(Ident | QuotedIdent) ")"`
+	Projection *Projection `"PROJECTION" @@`
+}
+
+func (c *LocalSecondaryIndex) node() {}
+
+type TableAttr struct {
+	Name string `@(Ident | QuotedIdent)`
+	Type string `@("STRING" | "NUMBER" | "BINARY")`
+	Key  string `(@("HASH" | "RANGE") "KEY")?`
+}
+
+func (c *TableAttr) node() {}
 
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
