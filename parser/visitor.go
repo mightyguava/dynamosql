@@ -43,6 +43,8 @@ func Visit(node Node, visitor func(node Node, next func() error) error) error {
 			return Visit(node.Projection, visitor)
 		case *TableAttr, *ProvisionedThroughput:
 			return nil
+		case *DropTable:
+			return nil
 		case *Select:
 			if err := Visit(node.Projection, visitor); err != nil {
 				return err

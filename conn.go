@@ -67,7 +67,16 @@ func (c conn) PrepareContext(ctx context.Context, query string) (driver.Stmt, er
 			dynamo:       c.dynamo,
 			mapToGoType:  c.mapToGoType,
 		}, err
-
+	case ast.DropTable != nil:
+		prepared, err := querybuilder.PrepareDropTable(ast.DropTable)
+		if err != nil {
+			return nil, err
+		}
+		return &execStmt{
+			preparedStmt: prepared,
+			dynamo:       c.dynamo,
+			mapToGoType:  c.mapToGoType,
+		}, err
 	default:
 		panic("unsupported statement")
 	}

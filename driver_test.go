@@ -276,7 +276,7 @@ func TestReplaceCanOverwrite(t *testing.T) {
 	require.Equal(t, updatedPrisioners, movie)
 }
 
-func TestCreateTable(t *testing.T) {
+func TestCreateDropTable(t *testing.T) {
 	sess := fixtures.SetUp(t)
 	client := dynamodb.New(sess)
 	_, _ = client.DeleteTable(&dynamodb.DeleteTableInput{TableName: aws.String("movies")})
@@ -300,5 +300,7 @@ func TestCreateTable(t *testing.T) {
 				PROVISIONED THROUGHPUT READ 1 WRITE 1
 		) PROVISIONED THROUGHPUT READ 1 WRITE 1
     `)
+	require.NoError(t, err)
+	_, err = db.Exec(`DROP TABLE movies`)
 	require.NoError(t, err)
 }

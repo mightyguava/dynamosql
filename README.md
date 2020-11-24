@@ -135,7 +135,7 @@ fmt.Println(rushHour)
 ## Grammar
 
 ```
-AST = (Select | InsertOrReplace | CreateTable) ";"? .
+AST = (Select | InsertOrReplace | CreateTable | DropTable) ";"? .
 
 Select = "SELECT" ProjectionExpression "FROM" <field> ("USE" "INDEX" "(" <ident> ")")? ("WHERE" AndExpression)? ("ASC" | "DESC")? ("LIMIT" <number>)? .
 ProjectionExpression = ("*" | ("document" "(" "*" ")")) | (ProjectionColumn ("," ProjectionColumn)*) .
@@ -163,11 +163,13 @@ JSONObjectEntry = (<ident> | <string>) ":" JSONValue .
 JSONValue = <number> | <string> | <bool> | <null> | JSONObject | JSONArray .
 JSONArray = "[" (JSONValue ("," JSONValue)* ","?)? "]" .
 
-CreateTable = "CREATE" "TABLE" <field> "(" CreateTableEntry ("," CreateTableEntry)* ")" .
-CreateTableEntry = GlobalSecondaryIndex | LocalSecondaryIndex | ProvisionedThroughput | TableAttr .
-GlobalSecondaryIndex = "GLOBAL" "SECONDARY" "INDEX" <field> "HASH" "(" <field> ")" "RANGE" "(" <field> ")" "PROJECTION" Projection ProvisionedThroughput .
-Projection = ("KEYS" "ONLY") | "ALL" | ("INCLUDE" (<field> ("," <field>)*)) .
+CreateTable = "CREATE" "TABLE" <field> "(" CreateTableEntry ("," CreateTableEntry)* ")" ProvisionedThroughput .
+CreateTableEntry = GlobalSecondaryIndex | LocalSecondaryIndex | TableAttr .
+GlobalSecondaryIndex = "GLOBAL" "SECONDARY"? "INDEX" <field> "HASH" "(" <field> ")" ("RANGE" "(" <field> ")")? "PROJECTION" Projection ProvisionedThroughput .
+Projection = "KEYS_ONLY" | "ALL" | ("INCLUDE" (<field> ("," <field>)*)) .
 ProvisionedThroughput = "PROVISIONED" "THROUGHPUT" "READ" <number> "WRITE" <number> .
-LocalSecondaryIndex = "LOCAL" "SECONDARY" "INDEX" <field> "RANGE" "(" <field> ")" "PROJECTION" Projection .
+LocalSecondaryIndex = "LOCAL" "SECONDARY"? "INDEX" <field> "RANGE" "(" <field> ")" "PROJECTION" Projection .
 TableAttr = <field> <type> (("HASH" | "RANGE") "KEY")? .
+
+DropTable = "DROP" "TABLE" <field> .
 ```
