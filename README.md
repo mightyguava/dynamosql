@@ -8,15 +8,35 @@
 * Makes working with DynamoDB much more pleasant.
 * Transparently generate KeyConditionExpression, ConditionExpression, etc
 * Supports advanced SQL driver features like named parameters, and slice/map parameters.
+* Supports prepared statements
 * Supports marshaling and unmarshaling using [`dynamodbattribute`](https://docs.aws.amazon.com/sdk-for-go/api/service/dynamodb/dynamodbattribute/).
+* Supports all DynamoDB functions
 * Works with any library that supports `database/sql`.
-* Does not magically add any features like JOIN or cross partition queries.
 
-There is also a CLI in `cmd/dynamosql` that can be used as a commandline interface to DynamoDB. For authentication, it accepts the same environment variables, config, and flags as the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
+**NOTE**: The SQL syntax for `dynamosql` is still in flux and is subject to change. It mostly follows ANSI SQL, but there are a few small extensions to make it match better to DynamoDB.
+
+There is also a CLI in `cmd/dynamosql` (powered by [usql](https://github.com/xo/usql)) that can be used as a commandline interface to DynamoDB. For authentication, it accepts the same environment variables, config, and flags as the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
 
 ## Inspiration
 
 SQL is a great query language, but traditional SQL databases tend not to scale so well. DynamoDB is a great scalable database, but it's query language is lacking. So why not combine them? Hence the inspiration for `dynamosql`.
+
+## Limitations
+
+`dynamosql` does not attempt to add additional features to DynamoDB. It's a convenience layer for interacting with DynamoDB. Thus, it suffers all the limitations imposed by DynamoDB. Known limitations are:
+
+* Does not support `JOIN` and cross-partition queries.
+* Max 25 items can be inserted in a batch, since that's the limit for `TransactWriteItems`.
+
+## Difference from PartiQL
+
+AWS released [PartiQL](https://aws.amazon.com/about-aws/whats-new/2020/11/you-now-can-use-a-sql-compatible-query-language-to-query-insert-update-and-delete-table-data-in-amazon-dynamodb/) which also provides a SQL layer for DynamoDB. It appears to be aimed more at analytics and interactive use. It
+
+* Is not a `database/sql` driver
+* Does not support prepared statements
+* Does not support DDL
+* Does not support bulk inserts
+* Drifts a bit further from SQL than dynamosql
 
 ## Usage
 
@@ -36,7 +56,7 @@ There are 3 ways to open a connection.
 via `database/sql`:
 
 ```go
-db, err := sql.Open("dynamodb://?region=us-west-2")
+db, err := sql.Open("dynamodb", "?region=us-west-2")
 ```
 passing a `Session` into the driver
 
@@ -49,7 +69,7 @@ db := dynamosql.NewWithSession(sess)
 
 passing a DynamoDB client into the driver
 
-```
+```go
 ddb := dynamodb.New(sess)
 db := dynamosql.NewWithClient(ddb)
 ```
@@ -93,6 +113,7 @@ db := dynamosql.NewWithClient(ddb)
 | INSERT | PutItem/TransactWriteItem | Errors if key exists. Uses TransactWriteItem to insert up to 25 items |
 | REPLACE ... RETURNING | PutItem/TransactWriteItem | Overwrites existing document.  Uses TransactWriteItem to insert up to 25 items |
 | (TODO) UPDATE | UpdateItem | |
+| (TODO) DELETE | DeleteItem | |
 | CREATE TABLE | CreateTable | supports global and local secondary indexes |
 | (TODO) ALTER TABLE | | |
 
