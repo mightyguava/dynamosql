@@ -3,7 +3,14 @@
 ![Test Status](https://github.com/mightyguava/dynamosql/workflows/Test/badge.svg)
 [![GoDoc](https://img.shields.io/badge/pkg.go.dev-doc-blue)](http://pkg.go.dev/github.com/mightyguava/dynamosql)
 
-`dynamosql` is a complete Go SQL driver for DynamoDB. It transforms SQL into DynamoDB requests like `Query`, `Scan`, `PutItem`, `UpdateItem`, `DeleteItem`, and maps the results back to SQL. It does not magically add any features like JOIN or cross partition queries. However, it makes working with DynamoDB much more pleasant, and allows you to use just about any existing wrapper for `database/sql`. It also supports advanced SQL driver features like named parameters, and slice/map parameters.
+`dynamosql` is a complete Go SQL driver for DynamoDB. It transforms SQL into DynamoDB requests like `Query`, `Scan`, `PutItem`, `UpdateItem`, `DeleteItem`, and maps the results back to SQL. It
+
+* Makes working with DynamoDB much more pleasant.
+* Transparently generate KeyConditionExpression, ConditionExpression, etc
+* Supports advanced SQL driver features like named parameters, and slice/map parameters.
+* Supports marshaling and unmarshaling using [`dynamodbattribute`](https://docs.aws.amazon.com/sdk-for-go/api/service/dynamodb/dynamodbattribute/).
+* Works with any library that supports `database/sql`.
+* Does not magically add any features like JOIN or cross partition queries.
 
 There is also a CLI in `cmd/dynamosql` that can be used as a commandline interface to DynamoDB. For authentication, it accepts the same environment variables, config, and flags as the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
 
