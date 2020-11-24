@@ -1,5 +1,5 @@
 parser.row{
-  Query: "CREATE TABLE movies (title STRING, year NUMBER, GLOBAL SECONDARY INDEX year_title HASH(year) RANGE(title) PROJECTION ALL PROVISIONED THROUGHPUT READ 1 WRITE 1);",
+  Query: "CREATE TABLE movies (title STRING, year NUMBER, GLOBAL SECONDARY INDEX year_title HASH(year) RANGE(title) PROJECTION ALL PROVISIONED THROUGHPUT READ 1 WRITE 1) PROVISIONED THROUGHPUT READ 1 WRITE 1;",
   AST: &parser.AST{
     CreateTable: &parser.CreateTable{
       Table: "movies",
@@ -30,6 +30,10 @@ parser.row{
             },
           },
         },
+      },
+      ProvisionedThroughput: &parser.ProvisionedThroughput{
+        ReadCapacityUnits: 1,
+        WriteCapacityUnits: 1,
       },
     },
   },

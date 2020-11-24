@@ -1,5 +1,5 @@
 parser.row{
-  Query: "CREATE TABLE movies (title STRING HASH KEY, year NUMBER RANGE KEY);",
+  Query: "CREATE TABLE movies (title STRING HASH KEY, year NUMBER RANGE KEY) PROVISIONED THROUGHPUT READ 1 WRITE 1;",
   AST: &parser.AST{
     CreateTable: &parser.CreateTable{
       Table: "movies",
@@ -18,6 +18,10 @@ parser.row{
             Key: "RANGE",
           },
         },
+      },
+      ProvisionedThroughput: &parser.ProvisionedThroughput{
+        ReadCapacityUnits: 1,
+        WriteCapacityUnits: 1,
       },
     },
   },

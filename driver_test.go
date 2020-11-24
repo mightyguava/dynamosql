@@ -294,12 +294,11 @@ func TestCreateTable(t *testing.T) {
 			year NUMBER RANGE KEY,
 			director STRING,
 			
-			PROVISIONED THROUGHPUT READ 1 WRITE 1,
 			GLOBAL SECONDARY INDEX director_index
-				HASH(year) RANGE(director)
+				HASH(year)
 				PROJECTION ALL
 				PROVISIONED THROUGHPUT READ 1 WRITE 1
-		)
+		) PROVISIONED THROUGHPUT READ 1 WRITE 1
     `)
 	require.NoError(t, err)
 }

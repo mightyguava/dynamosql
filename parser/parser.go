@@ -92,17 +92,17 @@ type AST struct {
 }
 
 type CreateTable struct {
-	Table   string              `"CREATE" "TABLE" @(Ident | QuotedIdent) "("`
-	Entries []*CreateTableEntry `@@ ("," @@)* ")"`
+	Table                 string                 `"CREATE" "TABLE" @( Ident ( "." Ident )* | QuotedIdent ) "("`
+	Entries               []*CreateTableEntry    `@@ ("," @@)* ")"`
+	ProvisionedThroughput *ProvisionedThroughput `@@`
 }
 
 func (c *CreateTable) node() {}
 
 type CreateTableEntry struct {
-	GlobalSecondaryIndex  *GlobalSecondaryIndex  `  @@`
-	LocalSecondaryIndex   *LocalSecondaryIndex   `| @@`
-	ProvisionedThroughput *ProvisionedThroughput `| @@`
-	Attr                  *TableAttr             `| @@` // Must be last.
+	GlobalSecondaryIndex *GlobalSecondaryIndex `  @@`
+	LocalSecondaryIndex  *LocalSecondaryIndex  `| @@`
+	Attr                 *TableAttr            `| @@` // Must be last.
 }
 
 func (c *CreateTableEntry) node() {}
@@ -115,9 +115,9 @@ type ProvisionedThroughput struct {
 func (p *ProvisionedThroughput) node() {}
 
 type GlobalSecondaryIndex struct {
-	Name                  string                 `"GLOBAL" "SECONDARY" "INDEX" @(Ident | QuotedIdent)`
+	Name                  string                 `"GLOBAL" "SECONDARY"? "INDEX" @(Ident | QuotedIdent)`
 	PartitionKey          string                 `"HASH" "(" @(Ident | QuotedIdent) ")"`
-	SortKey               string                 `"RANGE" "(" @(Ident | QuotedIdent) ")"`
+	SortKey               string                 `("RANGE" "(" @(Ident | QuotedIdent) ")")?`
 	Projection            *Projection            `"PROJECTION" @@`
 	ProvisionedThroughput *ProvisionedThroughput `@@`
 }
@@ -125,13 +125,15 @@ type GlobalSecondaryIndex struct {
 func (c *GlobalSecondaryIndex) node() {}
 
 type Projection struct {
-	KeysOnly bool     `  @("KEYS" "ONLY")`
+	KeysOnly bool     `  @"KEYS_ONLY"`
 	All      bool     `| @"ALL"`
 	Include  []string `| "INCLUDE" (@(Ident | QuotedIdent) ("," (@(Ident | QuotedIdent)))*)`
 }
 
+func (p *Projection) node() {}
+
 type LocalSecondaryIndex struct {
-	Name       string      `"LOCAL" "SECONDARY" "INDEX" @(Ident | QuotedIdent)`
+	Name       string      `"LOCAL" "SECONDARY"? "INDEX" @(Ident | QuotedIdent)`
 	SortKey    string      `"RANGE" "(" @( Ident ( "." Ident )* | QuotedIdent ) ")"`
 	Projection *Projection `"PROJECTION" @@`
 }

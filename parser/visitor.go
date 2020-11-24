@@ -22,13 +22,11 @@ func Visit(node Node, visitor func(node Node, next func() error) error) error {
 					return err
 				}
 			}
-			return nil
+			return Visit(node.ProvisionedThroughput, visitor)
 		case *CreateTableEntry:
 			switch {
 			case node.Attr != nil:
 				return Visit(node.Attr, visitor)
-			case node.ProvisionedThroughput != nil:
-				return Visit(node.ProvisionedThroughput, visitor)
 			case node.GlobalSecondaryIndex != nil:
 				return Visit(node.GlobalSecondaryIndex, visitor)
 			case node.LocalSecondaryIndex != nil:
@@ -36,7 +34,14 @@ func Visit(node Node, visitor func(node Node, next func() error) error) error {
 			default:
 				panic(repr.String(node))
 			}
-		case *TableAttr, *GlobalSecondaryIndex, *LocalSecondaryIndex, *ProvisionedThroughput:
+		case *GlobalSecondaryIndex:
+			if err := Visit(node.Projection, visitor); err != nil {
+				return err
+			}
+			return Visit(node.ProvisionedThroughput, visitor)
+		case *LocalSecondaryIndex:
+			return Visit(node.Projection, visitor)
+		case *TableAttr, *ProvisionedThroughput:
 			return nil
 		case *Select:
 			if err := Visit(node.Projection, visitor); err != nil {

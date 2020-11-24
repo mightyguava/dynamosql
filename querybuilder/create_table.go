@@ -17,11 +17,8 @@ func PrepareCreateTable(ast *parser.AST) (ExecStmt, error) {
 	return execStatementFunc(func(ctx context.Context, dynamo dynamodbiface.DynamoDBAPI, args []driver.NamedValue) (*DriverResult, error) {
 		stmt := ast.CreateTable
 		req := &dynamodb.CreateTableInput{
-			TableName: &stmt.Table,
-			ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-				ReadCapacityUnits:  nil,
-				WriteCapacityUnits: nil,
-			},
+			TableName:             &stmt.Table,
+			ProvisionedThroughput: mapProvisionedThroughput(stmt.ProvisionedThroughput),
 		}
 		for _, entry := range stmt.Entries {
 			switch {
@@ -41,15 +38,20 @@ func PrepareCreateTable(ast *parser.AST) (ExecStmt, error) {
 
 			case entry.GlobalSecondaryIndex != nil:
 				gsi := entry.GlobalSecondaryIndex
-				req.GlobalSecondaryIndexes = append(req.GlobalSecondaryIndexes, &dynamodb.GlobalSecondaryIndex{
+				reqgsi := &dynamodb.GlobalSecondaryIndex{
 					IndexName: &gsi.Name,
 					KeySchema: []*dynamodb.KeySchemaElement{
 						{AttributeName: &gsi.PartitionKey, KeyType: aws.String("HASH")},
-						{AttributeName: &gsi.SortKey, KeyType: aws.String("RANGE")},
 					},
 					Projection:            mapProjection(gsi.Projection),
 					ProvisionedThroughput: mapProvisionedThroughput(gsi.ProvisionedThroughput),
-				})
+				}
+				if gsi.SortKey != "" {
+					reqgsi.KeySchema = append(reqgsi.KeySchema,
+						&dynamodb.KeySchemaElement{AttributeName: &gsi.SortKey, KeyType: aws.String("RANGE")},
+					)
+				}
+				req.GlobalSecondaryIndexes = append(req.GlobalSecondaryIndexes, reqgsi)
 
 			case entry.LocalSecondaryIndex != nil:
 				lsi := entry.LocalSecondaryIndex
@@ -60,9 +62,6 @@ func PrepareCreateTable(ast *parser.AST) (ExecStmt, error) {
 					},
 					Projection: mapProjection(lsi.Projection),
 				})
-
-			case entry.ProvisionedThroughput != nil:
-				req.ProvisionedThroughput = mapProvisionedThroughput(entry.ProvisionedThroughput)
 
 			default:
 				panic(repr.String(entry))
