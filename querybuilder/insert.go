@@ -27,17 +27,13 @@ type PreparedInsert struct {
 }
 
 func PrepareInsert(ctx context.Context, tables *schema.TableLoader, ast *parser.AST) (*PreparedInsert, error) {
-	var ins *parser.Insert
-	replace := false
+	var ins *parser.InsertOrReplace
 	switch {
 	case ast.Insert != nil:
 		ins = ast.Insert
-		if ins.Returning != nil && *ins.Returning != "NONE" {
+		if !ins.Replace && ins.Returning != nil && *ins.Returning != "NONE" {
 			return nil, errors.New("RETURNING is not allowed on INSERT")
 		}
-	case ast.Replace != nil:
-		ins = ast.Replace
-		replace = true
 	default:
 		return nil, fmt.Errorf("expected INSERT but got %s", repr.String(ast))
 	}
@@ -84,7 +80,7 @@ func PrepareInsert(ctx context.Context, tables *schema.TableLoader, ast *parser.
 		Placeholder: placeholder,
 		Values:      values,
 		Returning:   ins.Returning,
-		Replace:     replace,
+		Replace:     ins.Replace,
 	}, nil
 }
 

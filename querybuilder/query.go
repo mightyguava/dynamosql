@@ -481,16 +481,11 @@ func (v *visitor) VisitFilterExpression(n interface{}) (string, error) {
 		case node.Not != nil:
 			return v.VisitFilterExpression(node.Not)
 		case node.Parenthesized != nil:
-			return v.VisitFilterExpression(node.Parenthesized)
+			acc, err := v.VisitFilterExpression(node.Parenthesized)
+			return "(" + acc + ")", err
 		default:
 			panic("invalid condition subtype")
 		}
-	case *parser.ParenthesizedExpression:
-		acc, err := v.VisitFilterExpression(node.ConditionExpression)
-		if err != nil {
-			return "", err
-		}
-		return "(" + acc + ")", nil
 	case *parser.NotCondition:
 		acc, err := v.VisitFilterExpression(node.Condition)
 		if err != nil {

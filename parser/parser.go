@@ -14,6 +14,9 @@ import (
 var (
 	Lexer = stateful.MustSimple([]stateful.Rule{
 		{"Whitespace", `\s+`, nil},
+		{"Bool", `(?i)\b(TRUE|FALSE)\b`, nil},
+		{"Type", `(?i)\b(STRING|NUMBER|BINARY)\b`, nil},
+		{"Null", `(?i)\bNULL\b`, nil},
 		{"Keyword", keywordsRe(), nil},
 		{"QuotedIdent", "`[^`]+`", nil},
 		{"Ident", `[a-zA-Z_][a-zA-Z0-9_]*`, nil},
@@ -27,17 +30,17 @@ var (
 		participle.Lexer(Lexer),
 		participle.Unquote("String"),
 		UnquoteIdent(),
-		participle.CaseInsensitive("Keyword"),
+		participle.CaseInsensitive("Keyword", "Bool", "Type", "Null"),
 		participle.UseLookahead(2),
 		participle.Elide("Whitespace"),
 	)
 )
 
 var keywords = []string{
-	"SELECT", "FROM", "WHERE", "LIMIT", "OFFSET", "INSERT", "INTO", "VALUES", "TRUE", "FALSE", "NULL", "NOT",
+	"SELECT", "FROM", "WHERE", "LIMIT", "OFFSET", "INSERT", "INTO", "VALUES", "NOT",
 	"BETWEEN", "AND", "OR", "USE", "INDEX", "ASC", "DESC", "CREATE", "TABLE", "HASH", "RANGE", "PROJECTION",
-	"PROVISIONED", "THROUGHPUT", "READ", "WRITE", "GLOBAL", "LOCAL", "INDEX", "SECONDARY", "STRING", "NUMBER",
-	"BINARY", "RETURNING", "NONE", "ALL_OLD", "UPDATED_OLD", "ALL_NEW", "UPDATED_NEW", "DELETE", "CHECK",
+	"PROVISIONED", "THROUGHPUT", "READ", "WRITE", "GLOBAL", "LOCAL", "INDEX", "SECONDARY",
+	"RETURNING", "NONE", "ALL_OLD", "UPDATED_OLD", "ALL_NEW", "UPDATED_NEW", "DELETE", "CHECK",
 }
 
 func keywordsRe() string {
@@ -83,14 +86,13 @@ type Node interface {
 }
 
 type AST struct {
-	Select      *Select      `(   "SELECT"         @@`
-	Insert      *Insert      `  | "INSERT"         @@`
-	Replace     *Insert      `  | "REPLACE"        @@`
-	CreateTable *CreateTable `  | "CREATE" "TABLE" @@ ) ";"?`
+	Select      *Select          `(  @@`
+	Insert      *InsertOrReplace ` | @@`
+	CreateTable *CreateTable     ` | @@ ) ";"?`
 }
 
 type CreateTable struct {
-	Table   string              `@(Ident | QuotedIdent) "("`
+	Table   string              `"CREATE" "TABLE" @(Ident | QuotedIdent) "("`
 	Entries []*CreateTableEntry `@@ ("," @@)* ")"`
 }
 
@@ -130,7 +132,7 @@ type Projection struct {
 
 type LocalSecondaryIndex struct {
 	Name       string      `"LOCAL" "SECONDARY" "INDEX" @(Ident | QuotedIdent)`
-	SortKey    string      `"RANGE" "(" @(Ident | QuotedIdent) ")"`
+	SortKey    string      `"RANGE" "(" @( Ident ( "." Ident )* | QuotedIdent ) ")"`
 	Projection *Projection `"PROJECTION" @@`
 }
 
@@ -138,7 +140,7 @@ func (c *LocalSecondaryIndex) node() {}
 
 type TableAttr struct {
 	Name string `@(Ident | QuotedIdent)`
-	Type string `@("STRING" | "NUMBER" | "BINARY")`
+	Type string `@Type`
 	Key  string `(@("HASH" | "RANGE") "KEY")?`
 }
 
@@ -146,16 +148,17 @@ func (c *TableAttr) node() {}
 
 // Select based on http://www.h2database.com/html/grammar.html
 type Select struct {
-	Projection *ProjectionExpression `@@`
-	From       string                `"FROM" ( @Ident ( @"." @Ident )* | @QuotedIdent )`
+	Projection *ProjectionExpression `"SELECT" @@`
+	From       string                `"FROM" @( Ident ( "." Ident )* | QuotedIdent )`
 	Index      *string               `( "USE" "INDEX" "(" @Ident ")" )?`
 	Where      *AndExpression        `( "WHERE" @@ )?`
 	Descending *ScanDescending       `( @"ASC" | @"DESC" )?`
 	Limit      *int                  `( "LIMIT" @Number )?`
 }
 
-type Insert struct {
-	Into      string            `"INTO" ( @Ident ( @"." @Ident )* | @QuotedIdent )`
+type InsertOrReplace struct {
+	Replace   bool              `("INSERT" | @"REPLACE")`
+	Into      string            `"INTO" @( Ident ( "." Ident )* | QuotedIdent )`
 	Values    []*InsertTerminal `"VALUES" "(" @@ ")" ( "," "(" @@ ")" )* `
 	Returning *string           `( "RETURNING" @( "NONE" | "ALL_OLD" ) )?`
 }
@@ -216,17 +219,11 @@ type AndExpression struct {
 
 func (e *AndExpression) node() {}
 
-type ParenthesizedExpression struct {
-	ConditionExpression *ConditionExpression `@@`
-}
-
-func (e *ParenthesizedExpression) node() {}
-
 type Condition struct {
-	Parenthesized *ParenthesizedExpression `  "(" @@ ")"`
-	Not           *NotCondition            `| "NOT" @@`
-	Operand       *ConditionOperand        `| @@`
-	Function      *FunctionExpression      `| @@`
+	Parenthesized *ConditionExpression `  "(" @@ ")"`
+	Not           *NotCondition        `| "NOT" @@`
+	Operand       *ConditionOperand    `| @@`
+	Function      *FunctionExpression  `| @@`
 }
 
 func (e *Condition) node() {}
@@ -404,8 +401,8 @@ type JSONValue struct {
 type Scalar struct {
 	Number  *float64 `  @Number`
 	Str     *string  `| @String`
-	Boolean *Boolean `| @("TRUE" | "FALSE")`
-	Null    bool     `| @"NULL"`
+	Boolean *Boolean `| @Bool`
+	Null    bool     `| @Null`
 }
 
 func (l *Scalar) node() {}

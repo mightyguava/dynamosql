@@ -134,19 +134,19 @@ fmt.Println(rushHour)
 
 ## Grammar
 
-```ebnf
-AST = (("SELECT" Select) | ("INSERT" Insert) | ("REPLACE" Insert) | ("CREATE" "TABLE" CreateTable)) ";"? .
-Select = ProjectionExpression "FROM" ((<ident> ("." <ident>)*) | <quotedident>) ("USE" "INDEX" "(" <ident> ")")? ("WHERE" AndExpression)? ("ASC" | "DESC")? ("LIMIT" <number>)? .
+```
+AST = (Select | InsertOrReplace | CreateTable) ";"? .
+
+Select = "SELECT" ProjectionExpression "FROM" <field> ("USE" "INDEX" "(" <ident> ")")? ("WHERE" AndExpression)? ("ASC" | "DESC")? ("LIMIT" <number>)? .
 ProjectionExpression = ("*" | ("document" "(" "*" ")")) | (ProjectionColumn ("," ProjectionColumn)*) .
 ProjectionColumn = FunctionExpression | DocumentPath .
 FunctionExpression = <ident> "(" FunctionArgument ("," FunctionArgument)* ")" .
 FunctionArgument = DocumentPath | Value .
 DocumentPath = PathFragment ("." PathFragment)* .
-PathFragment = (<ident> | <quotedident>) ("[" <number> "]")* .
-Value = <number> | <string> | ("TRUE" | "FALSE") | "NULL" | (":" <ident>) | "?" .
+PathFragment = <field> ("[" <number> "]")* .
+Value = <number> | <string> | <bool> | <null> | (":" <ident>) | "?" .
 AndExpression = Condition ("AND" Condition)* .
-Condition = ("(" ParenthesizedExpression ")") | ("NOT" NotCondition) | ConditionOperand | FunctionExpression .
-ParenthesizedExpression = ConditionExpression .
+Condition = ("(" ConditionExpression ")") | ("NOT" NotCondition) | ConditionOperand | FunctionExpression .
 ConditionExpression = AndExpression ("OR" AndExpression)* .
 NotCondition = Condition .
 ConditionOperand = DocumentPath ConditionRHS .
@@ -155,17 +155,19 @@ Compare = ("<>" | "<=" | ">=" | "=" | "<" | ">" | "!=") Operand .
 Operand = Value | DocumentPath .
 Between = Operand "AND" Operand .
 In = Value ("," Value)* .
-Insert = "INTO" ((<ident> ("." <ident>)*) | <quotedident>) "VALUES" "(" InsertTerminal ")" ("," "(" InsertTerminal ")")* ("RETURNING" ("NONE" | "ALL_OLD"))? .
-InsertTerminal = <number> | <string> | ("TRUE" | "FALSE") | "NULL" | (":" <ident>) | "?" | JSONObject .
+
+InsertOrReplace = ("INSERT" | "REPLACE") "INTO" <field> "VALUES" "(" InsertTerminal ")" ("," "(" InsertTerminal ")")* ("RETURNING" ("NONE" | "ALL_OLD"))? .
+InsertTerminal = <number> | <string> | <bool> | <null> | (":" <ident>) | "?" | JSONObject .
 JSONObject = "{" (JSONObjectEntry ("," JSONObjectEntry)* ","?)? "}" .
 JSONObjectEntry = (<ident> | <string>) ":" JSONValue .
-JSONValue = <number> | <string> | ("TRUE" | "FALSE") | "NULL" | JSONObject | JSONArray .
+JSONValue = <number> | <string> | <bool> | <null> | JSONObject | JSONArray .
 JSONArray = "[" (JSONValue ("," JSONValue)* ","?)? "]" .
-CreateTable = (<ident> | <quotedident>) "(" CreateTableEntry ("," CreateTableEntry)* ")" .
+
+CreateTable = "CREATE" "TABLE" <field> "(" CreateTableEntry ("," CreateTableEntry)* ")" .
 CreateTableEntry = GlobalSecondaryIndex | LocalSecondaryIndex | ProvisionedThroughput | TableAttr .
-GlobalSecondaryIndex = "GLOBAL" "SECONDARY" "INDEX" (<ident> | <quotedident>) "HASH" "(" (<ident> | <quotedident>) ")" "RANGE" "(" (<ident> | <quotedident>) ")" "PROJECTION" Projection ProvisionedThroughput .
-Projection = ("KEYS" "ONLY") | "ALL" | ("INCLUDE" ((<ident> | <quotedident>) ("," (<ident> | <quotedident>))*)) .
+GlobalSecondaryIndex = "GLOBAL" "SECONDARY" "INDEX" <field> "HASH" "(" <field> ")" "RANGE" "(" <field> ")" "PROJECTION" Projection ProvisionedThroughput .
+Projection = ("KEYS" "ONLY") | "ALL" | ("INCLUDE" (<field> ("," <field>)*)) .
 ProvisionedThroughput = "PROVISIONED" "THROUGHPUT" "READ" <number> "WRITE" <number> .
-LocalSecondaryIndex = "LOCAL" "SECONDARY" "INDEX" (<ident> | <quotedident>) "RANGE" "(" (<ident> | <quotedident>) ")" "PROJECTION" Projection .
-TableAttr = (<ident> | <quotedident>) ("STRING" | "NUMBER" | "BINARY") (("HASH" | "RANGE") "KEY")? .
+LocalSecondaryIndex = "LOCAL" "SECONDARY" "INDEX" <field> "RANGE" "(" <field> ")" "PROJECTION" Projection .
+TableAttr = <field> <type> (("HASH" | "RANGE") "KEY")? .
 ```

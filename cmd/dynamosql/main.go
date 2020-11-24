@@ -48,7 +48,11 @@ func run(args *Args, u *user.User) error {
 	var err error
 
 	if args.DisplayGrammar {
-		fmt.Println(parser.EBNF())
+		ebnf := parser.EBNF()
+		// These make the EBNF a bit more human-readable.
+		ebnf = strings.ReplaceAll(ebnf, `((<ident> ("." <ident>)*) | <quotedident>)`, `<field>`)
+		ebnf = strings.ReplaceAll(ebnf, "(<ident> | <quotedident>)", "<field>")
+		fmt.Println(ebnf)
 		return nil
 	}
 

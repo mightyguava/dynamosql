@@ -82,8 +82,6 @@ func Visit(node Node, visitor func(node Node, next func() error) error) error {
 			default:
 				panic(fmt.Sprintf("invalid Condition %v", node))
 			}
-		case *ParenthesizedExpression:
-			return Visit(node.ConditionExpression, visitor)
 		case *NotCondition:
 			return Visit(node.Condition, visitor)
 		case *ConditionOperand:

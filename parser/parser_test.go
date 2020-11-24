@@ -94,7 +94,7 @@ func TestParseInsert(t *testing.T) {
 		{
 			name:  "basic",
 			query: "INSERT INTO `movies` VALUES (?)",
-			ast: &AST{Insert: &Insert{
+			ast: &AST{Insert: &InsertOrReplace{
 				Into:   "movies",
 				Values: []*InsertTerminal{{Value: Value{PositionalPlaceholder: true}}},
 			}},
@@ -102,15 +102,17 @@ func TestParseInsert(t *testing.T) {
 		{
 			name:  "basic replace",
 			query: "REPLACE INTO `movies` VALUES (?)",
-			ast: &AST{Replace: &Insert{
-				Into:   "movies",
-				Values: []*InsertTerminal{{Value: Value{PositionalPlaceholder: true}}},
+			ast: &AST{Insert: &InsertOrReplace{
+				Replace: true,
+				Into:    "movies",
+				Values:  []*InsertTerminal{{Value: Value{PositionalPlaceholder: true}}},
 			}},
 		},
 		{
 			name:  "replace returning",
 			query: "REPLACE INTO `movies` VALUES (?) RETURNING ALL_OLD",
-			ast: &AST{Replace: &Insert{
+			ast: &AST{Insert: &InsertOrReplace{
+				Replace:   true,
 				Into:      "movies",
 				Values:    []*InsertTerminal{{Value: Value{PositionalPlaceholder: true}}},
 				Returning: aws.String("ALL_OLD"),
@@ -124,7 +126,7 @@ VALUES ('{"title":"hello","year":2009}'),
        ('{"title":"foo","year":2938}');
 `,
 			ast: &AST{
-				Insert: &Insert{
+				Insert: &InsertOrReplace{
 					Into: "movies",
 					Values: []*InsertTerminal{
 						{
@@ -145,7 +147,7 @@ VALUES ({title:"hello",year:2009}),
        ({title:"foo",year:2938});
 `,
 			ast: &AST{
-				Insert: &Insert{
+				Insert: &InsertOrReplace{
 					Into: "movies",
 					Values: []*InsertTerminal{
 						{

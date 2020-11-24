@@ -37,7 +37,7 @@ func (c conn) PrepareContext(ctx context.Context, query string) (driver.Stmt, er
 		return nil, err
 	}
 	switch {
-	case ast.Insert != nil, ast.Replace != nil:
+	case ast.Insert != nil:
 		stmt, err := querybuilder.PrepareInsert(ctx, c.tables, ast)
 		if err != nil {
 			return nil, err

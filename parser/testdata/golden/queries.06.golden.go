@@ -51,34 +51,32 @@ parser.row{
             },
           },
           {
-            Parenthesized: &parser.ParenthesizedExpression{
-              ConditionExpression: &parser.ConditionExpression{
-                Or: []*parser.AndExpression{
-                  {
-                    And: []*parser.Condition{
-                      {
-                        Operand: &parser.ConditionOperand{
-                          Operand: &parser.DocumentPath{
-                            Fragment: []*parser.PathFragment{
-                              {
-                                Symbol: "year",
-                              },
+            Parenthesized: &parser.ConditionExpression{
+              Or: []*parser.AndExpression{
+                {
+                  And: []*parser.Condition{
+                    {
+                      Operand: &parser.ConditionOperand{
+                        Operand: &parser.DocumentPath{
+                          Fragment: []*parser.PathFragment{
+                            {
+                              Symbol: "year",
                             },
                           },
-                          ConditionRHS: &parser.ConditionRHS{
-                            Between: &parser.Between{
-                              Start: &parser.Operand{
-                                Value: &parser.Value{
-                                  Scalar: parser.Scalar{
-                                    Number: &2009,
-                                  },
+                        },
+                        ConditionRHS: &parser.ConditionRHS{
+                          Between: &parser.Between{
+                            Start: &parser.Operand{
+                              Value: &parser.Value{
+                                Scalar: parser.Scalar{
+                                  Number: &2009,
                                 },
                               },
-                              End: &parser.Operand{
-                                Value: &parser.Value{
-                                  Scalar: parser.Scalar{
-                                    Number: &2015,
-                                  },
+                            },
+                            End: &parser.Operand{
+                              Value: &parser.Value{
+                                Scalar: parser.Scalar{
+                                  Number: &2015,
                                 },
                               },
                             },
@@ -87,25 +85,25 @@ parser.row{
                       },
                     },
                   },
-                  {
-                    And: []*parser.Condition{
-                      {
-                        Operand: &parser.ConditionOperand{
-                          Operand: &parser.DocumentPath{
-                            Fragment: []*parser.PathFragment{
-                              {
-                                Symbol: "actor",
-                              },
+                },
+                {
+                  And: []*parser.Condition{
+                    {
+                      Operand: &parser.ConditionOperand{
+                        Operand: &parser.DocumentPath{
+                          Fragment: []*parser.PathFragment{
+                            {
+                              Symbol: "actor",
                             },
                           },
-                          ConditionRHS: &parser.ConditionRHS{
-                            Compare: &parser.Compare{
-                              Operator: "=",
-                              Operand: &parser.Operand{
-                                Value: &parser.Value{
-                                  Scalar: parser.Scalar{
-                                    Str: &"Will Smith",
-                                  },
+                        },
+                        ConditionRHS: &parser.ConditionRHS{
+                          Compare: &parser.Compare{
+                            Operator: "=",
+                            Operand: &parser.Operand{
+                              Value: &parser.Value{
+                                Scalar: parser.Scalar{
+                                  Str: &"Will Smith",
                                 },
                               },
                             },

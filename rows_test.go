@@ -166,7 +166,7 @@ func TestPluck(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var projection parser.ProjectionColumn
-			require.NoError(t, projectionParser.ParseString("", test.path, &projection))
+			require.NoError(t, projectionParser.ParseString("", test.path, &projection), test.path)
 			v := pluck(&dynamodb.AttributeValue{M: item}, projection.DocumentPath)
 			require.Equal(t, test.result, v)
 		})
