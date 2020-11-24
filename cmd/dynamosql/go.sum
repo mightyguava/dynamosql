@@ -18,8 +18,8 @@ github.com/alecthomas/colour v0.0.0-20160524082231-60882d9e2721/go.mod h1:QO9JBo
 github.com/alecthomas/kingpin v2.2.6+incompatible h1:5svnBTFgJjZvGKyYBtMB0+m5wvrbUHiqye8wRJMlnYI=
 github.com/alecthomas/kingpin v2.2.6+incompatible/go.mod h1:59OFYbFVLKQKq+mqrL6Rw5bR0c3ACQaawgXx0QYndlE=
 github.com/alecthomas/kong v0.2.1-0.20190708041108-0548c6b1afae/go.mod h1:+inYUSluD+p4L8KdviBSgzcqEjUQOfC5fQDRFuc36lI=
-github.com/alecthomas/participle v0.6.0 h1:Pvo8XUCQKgIywVjz/+Ci3IsjGg+g/TdKkMcfgghKCEw=
-github.com/alecthomas/participle v0.6.0/go.mod h1:HfdmEuwvr12HXQN44HPWXR0lHmVolVYe4dyL6lQ3duY=
+github.com/alecthomas/participle v1.0.0-alpha3 h1:Hwpe+9HjN2C+xLODMWvhAAheX0BO1ocgf1XzbIaBPLk=
+github.com/alecthomas/participle v1.0.0-alpha3/go.mod h1:HfdmEuwvr12HXQN44HPWXR0lHmVolVYe4dyL6lQ3duY=
 github.com/alecthomas/repr v0.0.0-20180818092828-117648cd9897/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
 github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 h1:GDQdwm/gAcJcLAKQQZGOJ4knlw+7rfEQQcmwTbt4p5E=
 github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
@@ -152,8 +152,6 @@ github.com/mattn/go-runewidth v0.0.7/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m
 github.com/mattn/go-sqlite3 v1.9.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mattn/go-sqlite3 v2.0.2+incompatible h1:qzw9c2GNT8UFrgWNDhCTqRqYUSmu/Dav/9Z58LGpk7U=
 github.com/mattn/go-sqlite3 v2.0.2+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
-github.com/mightyguava/dynamosql v0.0.0-20201106003410-0b8f4855fb23 h1:43MxmyOrvMu+eX2yzZ1Y7z6E9GTLPRRwGYluLv8r0Pk=
-github.com/mightyguava/dynamosql v0.0.0-20201106003410-0b8f4855fb23/go.mod h1:yWjk+xyB9VbOW4yTtjQpeoS8U/xoAWP5p7vSaWwaMCQ=
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/nakagami/firebirdsql v0.0.0-20191128141720-8048f7ca3088 h1:M8fjELRXXQEE3oTdGSfhEDYFQhK9uIIm95ZLL1ndud4=
 github.com/nakagami/firebirdsql v0.0.0-20191128141720-8048f7ca3088/go.mod h1:yUx1EqfvqHBg0QcpcloWfeqH/yoLoI2j7sllgVhHHSQ=

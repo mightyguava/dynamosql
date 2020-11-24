@@ -131,3 +131,41 @@ row := db.QueryRow(`SELECT * FROM movies WHERE title = :name`, sql.Named("name",
 err := row.Scan(dynamosql.Document(&rushHour))
 fmt.Println(rushHour)
 ```
+
+## Grammar
+
+```ebnf
+AST = (("SELECT" Select) | ("INSERT" Insert) | ("REPLACE" Insert) | ("CREATE" "TABLE" CreateTable)) ";"? .
+Select = ProjectionExpression "FROM" ((<ident> ("." <ident>)*) | <quotedident>) ("USE" "INDEX" "(" <ident> ")")? ("WHERE" AndExpression)? ("ASC" | "DESC")? ("LIMIT" <number>)? .
+ProjectionExpression = ("*" | ("document" "(" "*" ")")) | (ProjectionColumn ("," ProjectionColumn)*) .
+ProjectionColumn = FunctionExpression | DocumentPath .
+FunctionExpression = <ident> "(" FunctionArgument ("," FunctionArgument)* ")" .
+FunctionArgument = DocumentPath | Value .
+DocumentPath = PathFragment ("." PathFragment)* .
+PathFragment = (<ident> | <quotedident>) ("[" <number> "]")* .
+Value = <number> | <string> | ("TRUE" | "FALSE") | "NULL" | (":" <ident>) | "?" .
+AndExpression = Condition ("AND" Condition)* .
+Condition = ("(" ParenthesizedExpression ")") | ("NOT" NotCondition) | ConditionOperand | FunctionExpression .
+ParenthesizedExpression = ConditionExpression .
+ConditionExpression = AndExpression ("OR" AndExpression)* .
+NotCondition = Condition .
+ConditionOperand = DocumentPath ConditionRHS .
+ConditionRHS = Compare | ("BETWEEN" Between) | ("IN" "(" In ")") .
+Compare = ("<>" | "<=" | ">=" | "=" | "<" | ">" | "!=") Operand .
+Operand = Value | DocumentPath .
+Between = Operand "AND" Operand .
+In = Value ("," Value)* .
+Insert = "INTO" ((<ident> ("." <ident>)*) | <quotedident>) "VALUES" "(" InsertTerminal ")" ("," "(" InsertTerminal ")")* ("RETURNING" ("NONE" | "ALL_OLD"))? .
+InsertTerminal = <number> | <string> | ("TRUE" | "FALSE") | "NULL" | (":" <ident>) | "?" | JSONObject .
+JSONObject = "{" (JSONObjectEntry ("," JSONObjectEntry)* ","?)? "}" .
+JSONObjectEntry = (<ident> | <string>) ":" JSONValue .
+JSONValue = <number> | <string> | ("TRUE" | "FALSE") | "NULL" | JSONObject | JSONArray .
+JSONArray = "[" (JSONValue ("," JSONValue)* ","?)? "]" .
+CreateTable = (<ident> | <quotedident>) "(" CreateTableEntry ("," CreateTableEntry)* ")" .
+CreateTableEntry = GlobalSecondaryIndex | LocalSecondaryIndex | ProvisionedThroughput | TableAttr .
+GlobalSecondaryIndex = "GLOBAL" "SECONDARY" "INDEX" (<ident> | <quotedident>) "HASH" "(" (<ident> | <quotedident>) ")" "RANGE" "(" (<ident> | <quotedident>) ")" "PROJECTION" Projection ProvisionedThroughput .
+Projection = ("KEYS" "ONLY") | "ALL" | ("INCLUDE" ((<ident> | <quotedident>) ("," (<ident> | <quotedident>))*)) .
+ProvisionedThroughput = "PROVISIONED" "THROUGHPUT" "READ" <number> "WRITE" <number> .
+LocalSecondaryIndex = "LOCAL" "SECONDARY" "INDEX" (<ident> | <quotedident>) "RANGE" "(" (<ident> | <quotedident>) ")" "PROJECTION" Projection .
+TableAttr = (<ident> | <quotedident>) ("STRING" | "NUMBER" | "BINARY") (("HASH" | "RANGE") "KEY")? .
+```

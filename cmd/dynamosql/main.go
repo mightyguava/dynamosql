@@ -17,6 +17,7 @@ import (
 	"github.com/xo/usql/text"
 
 	"github.com/mightyguava/dynamosql"
+	"github.com/mightyguava/dynamosql/parser"
 )
 
 func main() {
@@ -45,6 +46,11 @@ func main() {
 // specified, otherwise launch an interactive readline from stdin.
 func run(args *Args, u *user.User) error {
 	var err error
+
+	if args.DisplayGrammar {
+		fmt.Println(parser.EBNF())
+		return nil
+	}
 
 	// get working directory
 	wd, err := os.Getwd()

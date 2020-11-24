@@ -1,5 +1,5 @@
-github.com/alecthomas/participle v0.6.0 h1:Pvo8XUCQKgIywVjz/+Ci3IsjGg+g/TdKkMcfgghKCEw=
-github.com/alecthomas/participle v0.6.0/go.mod h1:HfdmEuwvr12HXQN44HPWXR0lHmVolVYe4dyL6lQ3duY=
+github.com/alecthomas/participle v1.0.0-alpha3 h1:Hwpe+9HjN2C+xLODMWvhAAheX0BO1ocgf1XzbIaBPLk=
+github.com/alecthomas/participle v1.0.0-alpha3/go.mod h1:HfdmEuwvr12HXQN44HPWXR0lHmVolVYe4dyL6lQ3duY=
 github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
 github.com/alecthomas/repr v0.0.0-20201103221029-55c485bd663f h1:jXPaiovuWmnCXfJ8UYiiLtI/LAJPnaZnoV+LfIDEJRc=
 github.com/alecthomas/repr v0.0.0-20201103221029-55c485bd663f/go.mod h1:2kn6fqh/zIyPLmm3ugklbEi5hg5wS435eygvNfaDQL8=

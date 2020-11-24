@@ -9,7 +9,7 @@
   },
   {
     "Query": "SELECT * FROM gamescores WHERE UserId = \"101\" AND Wins = $1",
-    "Error": "1:58: invalid token '$'"
+    "Error": "1:58: invalid input text \"$1\""
   },
   {
     "Query": "SELECT * FROM gamescores WHERE UserId = :UserId OR Wins = 3",

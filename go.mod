@@ -3,7 +3,7 @@ module github.com/mightyguava/dynamosql
 go 1.14
 
 require (
-	github.com/alecthomas/participle v0.6.0
+	github.com/alecthomas/participle v1.0.0-alpha3
 	github.com/alecthomas/repr v0.0.0-20201103221029-55c485bd663f
 	github.com/aws/aws-sdk-go v1.28.7
 	github.com/sebdah/goldie/v2 v2.5.1

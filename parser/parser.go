@@ -8,18 +8,20 @@ import (
 
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
+	"github.com/alecthomas/participle/lexer/stateful"
 )
 
 var (
-	Lexer = lexer.Must(lexer.Regexp(`(\s+)` +
-		`|\b(?P<Keyword>(?i)SELECT|FROM|WHERE|LIMIT|OFFSET|INSERT|INTO|VALUES|TRUE|FALSE|NULL|NOT|BETWEEN|AND|OR|USE|INDEX|ASC|DESC|CREATE|TABLE|HASH|RANGE|PROJECTION|PROVISIONED|THROUGHPUT|READ|WRITE|GLOBAL|LOCAL|INDEX|SECONDARY|STRING|NUMBER|BINARY|RETURNING|NONE|ALL_OLD|UPDATED_OLD|ALL_NEW|UPDATED_NEW|DELETE|CHECK)\b` +
-		"|(?P<QuotedIdent>`[^`]+`)" +
-		`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
-		`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
-		`|(?P<String>'[^']*'|"[^"]*")` +
-		`|(?P<Operators><>|!=|<=|>=|[-+*/%:?,.()=<>\[\]{}])` +
-		`|;`,
-	))
+	Lexer = stateful.MustSimple([]stateful.Rule{
+		{"Whitespace", `\s+`, nil},
+		{"Keyword", keywordsRe(), nil},
+		{"QuotedIdent", "`[^`]+`", nil},
+		{"Ident", `[a-zA-Z_][a-zA-Z0-9_]*`, nil},
+		{"Number", `[-+]?\d*\.?\d+([eE][-+]?\d+)?`, nil},
+		{"String", `'[^']*'|"[^"]*"`, nil},
+		{"Operator", `<>|!=|<=|>=|[-+*/%:?,.()=<>\[\]{};]`, nil},
+	},
+	)
 	parser = participle.MustBuild(
 		&AST{},
 		participle.Lexer(Lexer),
@@ -27,13 +29,30 @@ var (
 		UnquoteIdent(),
 		participle.CaseInsensitive("Keyword"),
 		participle.UseLookahead(2),
+		participle.Elide("Whitespace"),
 	)
 )
 
+var keywords = []string{
+	"SELECT", "FROM", "WHERE", "LIMIT", "OFFSET", "INSERT", "INTO", "VALUES", "TRUE", "FALSE", "NULL", "NOT",
+	"BETWEEN", "AND", "OR", "USE", "INDEX", "ASC", "DESC", "CREATE", "TABLE", "HASH", "RANGE", "PROJECTION",
+	"PROVISIONED", "THROUGHPUT", "READ", "WRITE", "GLOBAL", "LOCAL", "INDEX", "SECONDARY", "STRING", "NUMBER",
+	"BINARY", "RETURNING", "NONE", "ALL_OLD", "UPDATED_OLD", "ALL_NEW", "UPDATED_NEW", "DELETE", "CHECK",
+}
+
+func keywordsRe() string {
+	return `(?i)\b(` + strings.Join(keywords, "|") + `)\b`
+}
+
 func Parse(s string) (*AST, error) {
 	var ast AST
-	err := parser.ParseString(s, &ast)
+	err := parser.ParseString("", s, &ast)
 	return &ast, err
+}
+
+// EBNF grammar for the SQL parser.
+func EBNF() string {
+	return parser.String()
 }
 
 // UnquoteIdent removes surrounding backticks (`) from quoted identifiers

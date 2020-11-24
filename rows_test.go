@@ -62,6 +62,7 @@ func TestPluck(t *testing.T) {
 	projectionParser := participle.MustBuild(
 		&parser.ProjectionColumn{},
 		participle.Lexer(parser.Lexer),
+		participle.Elide("Whitespace"),
 	)
 	item := map[string]*dynamodb.AttributeValue{
 		"field": {S: aws.String("foo")},
@@ -165,7 +166,7 @@ func TestPluck(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var projection parser.ProjectionColumn
-			require.NoError(t, projectionParser.ParseString(test.path, &projection))
+			require.NoError(t, projectionParser.ParseString("", test.path, &projection))
 			v := pluck(&dynamodb.AttributeValue{M: item}, projection.DocumentPath)
 			require.Equal(t, test.result, v)
 		})

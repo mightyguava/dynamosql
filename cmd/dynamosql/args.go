@@ -26,6 +26,7 @@ type CommandOrFile struct {
 // Args are the command line arguments.
 type Args struct {
 	CommandOrFiles    []CommandOrFile
+	DisplayGrammar    bool
 	Out               string
 	ForcePassword     bool
 	NoPassword        bool
@@ -99,6 +100,7 @@ func NewArgs() *Args {
 	kingpin.Flag("endpoint-url", "The AWS endpoint URL to use, e.g. for pointing to a local dynamodb instance").StringVar(&args.AWSEndpointURL)
 
 	// command / file flags
+	kingpin.Flag("grammar", "display supported SQL grammar").BoolVar(&args.DisplayGrammar)
 	kingpin.Flag("command", "run only single command (SQL or internal) and exit").Short('c').SetValue(commandOrFile{args, true})
 	kingpin.Flag("file", "execute commands from file and exit").Short('f').SetValue(commandOrFile{args, false})
 
