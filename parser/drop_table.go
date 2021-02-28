@@ -5,4 +5,4 @@ type DropTable struct {
 	Table string `"DROP" "TABLE" @( Ident ( "." Ident )* | QuotedIdent )`
 }
 
-func (d *DropTable) node() {}
+func (d *DropTable) children() []Node { return nil }

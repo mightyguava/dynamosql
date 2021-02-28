@@ -7,7 +7,13 @@ type CreateTable struct {
 	ProvisionedThroughput *ProvisionedThroughput `@@`
 }
 
-func (c *CreateTable) node() {}
+func (c *CreateTable) children() (children []Node) {
+	for _, entry := range c.Entries {
+		children = append(children, entry)
+	}
+	children = append(children, c.ProvisionedThroughput)
+	return
+}
 
 type CreateTableEntry struct {
 	GlobalSecondaryIndex *GlobalSecondaryIndex `  @@`
@@ -15,14 +21,16 @@ type CreateTableEntry struct {
 	Attr                 *TableAttr            `| @@` // Must be last.
 }
 
-func (c *CreateTableEntry) node() {}
+func (c *CreateTableEntry) children() (children []Node) {
+	return []Node{c.GlobalSecondaryIndex, c.LocalSecondaryIndex, c.Attr}
+}
 
 type ProvisionedThroughput struct {
 	ReadCapacityUnits  int64 `"PROVISIONED" "THROUGHPUT" "READ" @Number`
 	WriteCapacityUnits int64 `"WRITE" @Number`
 }
 
-func (p *ProvisionedThroughput) node() {}
+func (p *ProvisionedThroughput) children() []Node { return nil }
 
 type GlobalSecondaryIndex struct {
 	Name                  string                 `"GLOBAL" "SECONDARY"? "INDEX" @(Ident | QuotedIdent)`
@@ -32,7 +40,9 @@ type GlobalSecondaryIndex struct {
 	ProvisionedThroughput *ProvisionedThroughput `@@`
 }
 
-func (c *GlobalSecondaryIndex) node() {}
+func (c *GlobalSecondaryIndex) children() (children []Node) {
+	return []Node{c.Projection, c.ProvisionedThroughput}
+}
 
 type Projection struct {
 	KeysOnly bool     `  @"KEYS_ONLY"`
@@ -40,7 +50,7 @@ type Projection struct {
 	Include  []string `| "INCLUDE" (@(Ident | QuotedIdent) ("," (@(Ident | QuotedIdent)))*)`
 }
 
-func (p *Projection) node() {}
+func (p *Projection) children() []Node { return nil }
 
 type LocalSecondaryIndex struct {
 	Name       string      `"LOCAL" "SECONDARY"? "INDEX" @(Ident | QuotedIdent)`
@@ -48,7 +58,9 @@ type LocalSecondaryIndex struct {
 	Projection *Projection `"PROJECTION" @@`
 }
 
-func (c *LocalSecondaryIndex) node() {}
+func (c *LocalSecondaryIndex) children() (children []Node) {
+	return []Node{c.Projection}
+}
 
 type TableAttr struct {
 	Name string `@(Ident | QuotedIdent)`
@@ -56,4 +68,4 @@ type TableAttr struct {
 	Key  string `(@("HASH" | "RANGE") "KEY")?`
 }
 
-func (c *TableAttr) node() {}
+func (c *TableAttr) children() []Node { return nil }

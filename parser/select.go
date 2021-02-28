@@ -16,14 +16,21 @@ type Select struct {
 	Limit      *int                  `( "LIMIT" @Number )?`
 }
 
-func (e *Select) node() {}
+func (e *Select) children() (children []Node) {
+	return []Node{e.Projection, e.Where}
+}
 
 type ProjectionExpression struct {
 	All     bool                `  ( @"*" | "document" "(" @"*" ")" )`
 	Columns []*ProjectionColumn `| @@ ( "," @@ )*`
 }
 
-func (e *ProjectionExpression) node() {}
+func (e *ProjectionExpression) children() (children []Node) {
+	for _, col := range e.Columns {
+		children = append(children, col)
+	}
+	return
+}
 
 func (e ProjectionExpression) String() string {
 	if e.All {
@@ -43,7 +50,9 @@ type ProjectionColumn struct {
 	DocumentPath *DocumentPath       `| @@`
 }
 
-func (c *ProjectionColumn) node() {}
+func (c *ProjectionColumn) children() (children []Node) {
+	return []Node{c.Function, c.DocumentPath}
+}
 
 func (c ProjectionColumn) String() string {
 	if c.DocumentPath != nil {
@@ -59,13 +68,23 @@ type ConditionExpression struct {
 	Or []*AndExpression `@@ ( "OR" @@ )*`
 }
 
-func (e *ConditionExpression) node() {}
+func (e *ConditionExpression) children() (children []Node) {
+	for _, or := range e.Or {
+		children = append(children, or)
+	}
+	return
+}
 
 type AndExpression struct {
 	And []*Condition `@@ ( "AND" @@ )*`
 }
 
-func (e *AndExpression) node() {}
+func (e *AndExpression) children() (children []Node) {
+	for _, and := range e.And {
+		children = append(children, and)
+	}
+	return
+}
 
 type Condition struct {
 	Parenthesized *ConditionExpression `  "(" @@ ")"`
@@ -74,20 +93,29 @@ type Condition struct {
 	Function      *FunctionExpression  `| @@`
 }
 
-func (e *Condition) node() {}
+func (e *Condition) children() (children []Node) {
+	return []Node{e.Parenthesized, e.Not, e.Operand, e.Function}
+}
 
 type NotCondition struct {
 	Condition *Condition `@@`
 }
 
-func (e *NotCondition) node() {}
+func (e *NotCondition) children() (children []Node) {
+	return []Node{e.Condition}
+}
 
 type FunctionExpression struct {
 	Function string              `@Ident`
 	Args     []*FunctionArgument `"(" @@ ( "," @@ )* ")"`
 }
 
-func (f *FunctionExpression) node() {}
+func (f *FunctionExpression) children() (children []Node) {
+	for _, arg := range f.Args {
+		children = append(children, arg)
+	}
+	return
+}
 
 func (f *FunctionExpression) FirstArgIsRef() bool {
 	return len(f.Args) > 0 && f.Args[0].DocumentPath != nil
@@ -112,7 +140,9 @@ type FunctionArgument struct {
 	Value        *Value        `| @@`
 }
 
-func (a *FunctionArgument) node() {}
+func (a *FunctionArgument) children() (children []Node) {
+	return []Node{a.DocumentPath, a.Value}
+}
 
 func (a FunctionArgument) String() string {
 	if a.DocumentPath != nil {
@@ -129,7 +159,9 @@ type ConditionOperand struct {
 	ConditionRHS *ConditionRHS `@@`
 }
 
-func (c *ConditionOperand) node() {}
+func (c *ConditionOperand) children() (children []Node) {
+	return []Node{c.Operand, c.ConditionRHS}
+}
 
 type ConditionRHS struct {
 	Compare *Compare `  @@`
@@ -137,40 +169,58 @@ type ConditionRHS struct {
 	In      *In      `| "IN" "(" @@ ")"`
 }
 
-func (c *ConditionRHS) node() {}
+func (c *ConditionRHS) children() (children []Node) {
+	return []Node{c.Compare, c.Between, c.In}
+}
 
 type In struct {
 	Values []*Value `@@ ( "," @@ )*`
 }
 
-func (i *In) node() {}
+func (i *In) children() (children []Node) {
+	for _, value := range i.Values {
+		children = append(children, value)
+	}
+	return
+}
 
 type Compare struct {
 	Operator string   `@( "<>" | "<=" | ">=" | "=" | "<" | ">" | "!=" )`
 	Operand  *Operand `@@`
 }
 
-func (c *Compare) node() {}
+func (c *Compare) children() (children []Node) {
+	return []Node{c.Operand}
+}
 
 type Between struct {
 	Start *Operand `@@`
 	End   *Operand `"AND" @@`
 }
 
-func (b *Between) node() {}
+func (b *Between) children() (children []Node) {
+	return []Node{b.Start, b.End}
+}
 
 type Operand struct {
 	Value     *Value        `  @@`
 	SymbolRef *DocumentPath `| @@`
 }
 
-func (o *Operand) node() {}
+func (o *Operand) children() (children []Node) {
+	return []Node{o.Value, o.SymbolRef}
+}
 
 type DocumentPath struct {
 	Fragment []*PathFragment `@@ ( "." @@ )*`
 }
 
-func (p *DocumentPath) node() {}
+func (p *DocumentPath) children() (children []Node) {
+	for _, frag := range p.Fragment {
+		children = append(children, frag)
+	}
+	return
+}
 
 // String marshals the DocumentPath into a human readable format. Do not use this function when marshaling
 // to expressions, because substitutions need to be applied first for reserved words.
@@ -189,7 +239,7 @@ type PathFragment struct {
 	Indexes []int  `( "[" @Number "]" )*`
 }
 
-func (p PathFragment) node() {}
+func (p PathFragment) children() []Node { return nil }
 
 func (p PathFragment) String() string {
 	if len(p.Indexes) == 0 {

@@ -81,7 +81,7 @@ func (b *ScanDescending) Capture(values []string) error {
 
 // Node is an interface implemented by all AST nodes.
 type Node interface {
-	node()
+	children() (children []Node)
 }
 
 type AST struct {
@@ -91,18 +91,29 @@ type AST struct {
 	DropTable   *DropTable       ` | @@ ) ";"?`
 }
 
+func (a *AST) children() (children []Node) {
+	return []Node{a.Select, a.Insert, a.CreateTable, a.DropTable}
+}
+
 type JSONObjectEntry struct {
 	Key   string     `@(Ident | String)`
 	Value *JSONValue `":" @@`
 }
 
-func (j *JSONObjectEntry) node() {}
+func (j *JSONObjectEntry) children() (children []Node) {
+	return []Node{j.Value}
+}
 
 type JSONObject struct {
 	Entries []*JSONObjectEntry `"{" (@@ ("," @@)* ","?)? "}"`
 }
 
-func (j *JSONObject) node() {}
+func (j *JSONObject) children() (children []Node) {
+	for _, entry := range j.Entries {
+		children = append(children, entry)
+	}
+	return
+}
 
 func (j *JSONObject) String() string {
 	out := make([]string, 0, len(j.Entries))
@@ -116,7 +127,12 @@ type JSONArray struct {
 	Entries []*JSONValue `"[" (@@ ("," @@)* ","?)? "]"`
 }
 
-func (j *JSONArray) node() {}
+func (j *JSONArray) children() (children []Node) {
+	for _, entry := range j.Entries {
+		children = append(children, entry)
+	}
+	return
+}
 
 func (j *JSONArray) String() string {
 	out := make([]string, 0, len(j.Entries))
@@ -132,6 +148,10 @@ type JSONValue struct {
 	Array  *JSONArray  `| @@`
 }
 
+func (j *JSONValue) children() (children []Node) {
+	return append(j.Scalar.children(), j.Object, j.Array)
+}
+
 type Scalar struct {
 	Number  *float64 `  @Number`
 	Str     *string  `| @String`
@@ -139,7 +159,7 @@ type Scalar struct {
 	Null    bool     `| @Null`
 }
 
-func (l *Scalar) node() {}
+func (l *Scalar) children() []Node { return nil }
 func (l *Scalar) String() string {
 	switch {
 	case l.Number != nil:
@@ -161,7 +181,7 @@ type Value struct {
 	PositionalPlaceholder bool    `| @"?" `
 }
 
-func (v *Value) node() {}
+func (v *Value) children() (children []Node) { return v.Scalar.children() }
 
 func (v Value) String() string {
 	switch {
